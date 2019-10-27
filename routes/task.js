@@ -1,6 +1,5 @@
 const express = require("express");
 const router = express.Router();
-// const _ = require("lodash");
 const Joi = require("joi");
 const createError = require("http-errors");
 const { decodeToken, userIsAuthorized } = require("../middleware/auth");
@@ -26,14 +25,7 @@ router.post("/", decodeToken, async (req, res, next) => {
 });
 
 const taskSchema = Joi.compile({
-  name: Joi.string().required(),
-  numPeopleServed: Joi.required(),
-  price: Joi.required(),
-  cuisine: Joi.string(),
-  chef: Joi.required(),
-  ingredients: Joi.required(),
-  requirements: Joi.required(),
-  taskImg: Joi.string()
+  name: Joi.string().required()
 });
 function validatetask(task) {
   return Joi.validate(task, taskSchema);
