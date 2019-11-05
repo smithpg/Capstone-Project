@@ -51,10 +51,10 @@ app.use(cookieParser());
 
 app.use("/api/task", taskRouter);
 
-app.use(express.static(path.join(__dirname, "client/public")));
+app.use(express.static(path.join(__dirname, "client/build")));
 
 app.use("*", (req, res, next) => {
-  res.sendFile(path.join(__dirname, "client/public/index.html"));
+  res.sendFile(path.join(__dirname, "client/build/index.html"));
 });
 
 // catch 404 and forward to error handler
