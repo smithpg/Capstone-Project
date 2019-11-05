@@ -7,7 +7,8 @@
     "heroku-postbuild": "cd client && npm install && npm run build",
     "dev": "NODE_ENV=development nodemon ./bin/index",
     "dev--no-restart": "NODE_ENV=development node ./bin/index",
-    "test": "NODE_ENV=test mocha --recursive --exit --timeout 30000"
+    "test": "NODE_ENV=test mocha --recursive --exit --timeout 30000",
+    "client": "cd client && npm start"
   },
   "dependencies": {
     "cookie-parser": "~1.4.4",
