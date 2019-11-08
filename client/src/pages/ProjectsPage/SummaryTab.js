@@ -3,7 +3,6 @@ import React from 'react';
 function SummaryTab(props) {
 
     function renderSummaryData(root, depth) {
-        console.log(depth);
         var data = props.calculateSummaryData(root.key);
         return (
             <React.Fragment key={root.key}>
@@ -22,12 +21,10 @@ function SummaryTab(props) {
     }
 
     function indent(content, num) {
-        console.log(num)
         var indented = content;
         for (var i = 0; i < num; i++) {
             indented = '----' + indented;
         }
-        console.log(indented)
         return indented;
     }
 

@@ -53,6 +53,7 @@ class ProjectsPage extends React.Component {
           handleRemainingChange={this.handleRemainingChange}
           handleDeleteTrackingDatapoint={this.handleDeleteTrackingDatapoint}
           calculateSummaryData={this.calculateSummaryData}
+          allDataPointsForNode={this.allDataPointsForNode}
         >
         </Tracking>
       </AppContainer>
@@ -398,11 +399,28 @@ class ProjectsPage extends React.Component {
       }
     }
 
-    const root = this.retrieveNode(this.state.data, key);
-    var final = traverse(root);
-    return final;
+    const data = Array.from(this.state.data);
+    const root = this.retrieveNode(data, key);
+    return traverse(root);
+  }
+
+  allDataPointsForNode = key => {
+    
+    function collect(root, datapoints) {
+      var data = datapoints.concat(root.data);
+      for (var i = 0; i < root.children.length; i++) {
+        data = collect(root.children[i], Array.from(data));
+      }
+      return data;
+    }
+
+    const data = Array.from(this.state.data);
+    const node = this.retrieveNode(data, key);
+    return collect(node, []);
   }
 }
+
+
 
 const AppContainer = styled.div`
   width: 100%

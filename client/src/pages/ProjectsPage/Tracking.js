@@ -2,6 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 import DataTab from './DataTab'
 import SummaryTab from './SummaryTab'
+import TrackingTab from './TrackingTab'
 
 function Tracking(props) {
 
@@ -38,6 +39,16 @@ function Tracking(props) {
                 calculateSummaryData={props.calculateSummaryData}
                 retrieveNode={props.retrieveNode}
             ></SummaryTab>
+        );
+    }
+
+    function renderTrackingTab() {
+        return (
+            <TrackingTab
+                selected={props.selected}
+                allDataPointsForNode={props.allDataPointsForNode}
+            >     
+            </TrackingTab>
         )
     }
 
@@ -47,6 +58,8 @@ function Tracking(props) {
                 return renderDataTab();
             } else if (props.selectedTab == 'summary') {
                 return renderSummaryTab();
+            } else if (props.selectedTab == 'tracking') {
+                return renderTrackingTab();
             }
         }
     }

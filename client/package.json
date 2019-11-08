@@ -13,6 +13,8 @@
     "email-validator": "^2.0.4",
     "google-map-react": "^1.1.4",
     "google-maps-react": "github:fullstackreact/google-maps-react#master",
+    "highcharts": "^7.2.1",
+    "highcharts-react-official": "^2.2.2",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-icons": "^3.7.0",
