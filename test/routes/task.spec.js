@@ -8,11 +8,11 @@ const app = require("../../app.js");
 chai.should();
 chai.use(chaiHttp);
 
-/**
- *  Create a dummy task for testing purposes
- */
 
 (async function() {
+  /**
+   *  Create a dummy task for testing purposes
+   */
   const taskId = await createDummyTask();
   const projectId = await createDummyProject();
 

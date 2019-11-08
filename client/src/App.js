@@ -1,8 +1,8 @@
 import React from "react";
-import 'antd/dist/antd.css';
-import ProjectTree from './ProjectTree';
-import Tracking from './Tracking'
-import styled from 'styled-components';
+import "antd/dist/antd.css";
+import ProjectTree from "./ProjectTree";
+import Tracking from "./Tracking";
+import styled from "styled-components";
 
 import "./App.css";
 
@@ -27,10 +27,10 @@ class App extends React.Component {
       selected: null,
       selectedTab: "summary",
       formValues: {
-        date: '',
-        username: '',
-        progress: '',
-        remaining: ''
+        date: "",
+        username: "",
+        progress: "",
+        remaining: ""
       }
     };
   }
@@ -39,14 +39,13 @@ class App extends React.Component {
     this.setState({
       selected: keys[0]
     });
-  }
+  };
 
-  onDrop = (event) => {
-
+  onDrop = event => {
     const dragKey = event.dragNode.props.eventKey;
     const dropKey = event.node.props.eventKey;
     const dropPosition = event.dropPosition;
-    
+
     var data = Array.from(this.state.data);
 
     const dragNode = this.retrieveNode(data, dragKey);
@@ -54,14 +53,13 @@ class App extends React.Component {
 
     this.removeNode(data, dragKey);
     this.insertNode(data, dragNode, dropKey, dropPosition, dropIndex);
-    
+
     this.setState({
       data: data
     });
-  }
+  };
 
   indexOf = (data, key) => {
-
     for (var i = 0; i < data.length; i++) {
       if (data[i].key == key) {
         return i;
@@ -72,10 +70,9 @@ class App extends React.Component {
       }
     }
     return -1;
-  }
+  };
 
   retrieveNode = (data, key) => {
-
     function traverse(root) {
       if (root === null) {
         return null;
@@ -97,10 +94,9 @@ class App extends React.Component {
     }
 
     return search(data);
-  }
+  };
 
   removeNode = (data, key) => {
-
     function traverse(root) {
       if (root === null) {
         return null;
@@ -119,14 +115,13 @@ class App extends React.Component {
         if (node != null) {
           return;
         }
-      }  
+      }
     }
 
-    search(data);      
-  }
+    search(data);
+  };
 
   insertNode = (data, dragNode, dropKey, dropPosition, dropIndex) => {
-
     function traverse(root) {
       if (root === null) {
         return;
@@ -145,112 +140,122 @@ class App extends React.Component {
           } else {
             array[i].children.splice(array[i].children.length, 0, dragNode);
           }
-            return;
+          return;
         }
         traverse(array[i]);
-      }    
+      }
     }
 
-    search(data)
-  }
+    search(data);
+  };
 
   handleAddChildClick = (parentKey, event) => {
     var data = Array.from(this.state.data);
     const parent = this.retrieveNode(data, parentKey);
-    const newNode = {key: Math.floor(Math.random()*1000), content: "new content", children: [], data: []};
-    
+    const newNode = {
+      key: Math.floor(Math.random() * 1000),
+      content: "new content",
+      children: [],
+      data: []
+    };
+
     parent.children.splice(parent.children.length, 0, newNode);
-    
+
     this.setState({
       data: data,
       editing: null
     });
 
-    event.stopPropagation();
-  }
+    // event.stopPropagation();
+  };
 
-  handleRemoveItemClick = (key) => {
+  handleRemoveItemClick = key => {
     var data = Array.from(this.state.data);
-    
+
     this.removeNode(data, key);
-    
+
     this.setState({
       data: data,
       selected: this.state.selected == key ? null : this.state.selected
     });
-  }
+  };
 
   handleEditItemClick = (key, event) => {
     this.setState({
       editing: key
     });
     event.stopPropagation();
-  }
+  };
 
   handleEditItem = (key, content, event) => {
     var data = Array.from(this.state.data);
-    
+
     const node = this.retrieveNode(data, key);
     node.content = content;
-    
+
     this.setState({
       data: data
     });
 
     event.stopPropagation();
-  }
+  };
 
-  handleDoneEditingClick = (event) => {
+  handleDoneEditingClick = event => {
     this.setState({
       editing: null
-    })
+    });
     event.stopPropagation();
-  }
+  };
 
   handleAddTopLevelProjectClick = () => {
     var data = Array.from(this.state.data);
-    
-    const newNode = {key: Math.floor(Math.random()*1000), content: "new content", children: [], data: []};
+
+    const newNode = {
+      key: Math.floor(Math.random() * 1000),
+      content: "new content",
+      children: [],
+      data: []
+    };
     data.splice(data.length, 0, newNode);
-    
+
     this.setState({
       data: data
     });
-  }
+  };
 
   handleSummaryTabClick = () => {
     this.setState({
       selectedTab: "summary"
-    })
-  }
+    });
+  };
 
   handleDataTabClick = () => {
     this.setState({
       selectedTab: "data"
-    })
-  }
+    });
+  };
 
   handleTrackingTabClick = () => {
     this.setState({
       selectedTab: "tracking"
-    })
-  }
+    });
+  };
 
   handleFormSubmit = event => {
     event.preventDefault();
     const trackingData = this.state.formValues;
-    trackingData.key = Math.floor(Math.random()*1000);
+    trackingData.key = Math.floor(Math.random() * 1000);
     const node = this.retrieveNode(this.state.data, this.state.selected);
     node.data.splice(node.data.length, 0, trackingData);
     this.setState({
       formValues: {
-        date: '',
-        username: '',
-        progress: '',
-        remaining: ''
+        date: "",
+        username: "",
+        progress: "",
+        remaining: ""
       }
     });
-  }
+  };
 
   handleDateChange = event => {
     this.setState({
@@ -261,7 +266,7 @@ class App extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   handleUsernameChange = event => {
     this.setState({
@@ -272,7 +277,7 @@ class App extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   handleProgressChange = event => {
     this.setState({
@@ -283,7 +288,7 @@ class App extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   handleRemainingChange = event => {
     this.setState({
@@ -294,7 +299,7 @@ class App extends React.Component {
         remaining: Number(event.target.value)
       }
     });
-  }
+  };
 
   handleDeleteTrackingDatapoint = (nodeKey, trackingKey) => {
     var data = Array.from(this.state.data);
@@ -308,17 +313,19 @@ class App extends React.Component {
     this.setState({
       data: data
     });
-  }
+  };
 
   calculateSummaryData = key => {
-
     function traverse(root) {
       var summaryData = {};
       if (root.data.length > 0) {
-        summaryData.progress = root.data[root.data.length-1].progress;
-        summaryData.remaining = root.data[root.data.length-1].remaining;
+        summaryData.progress = root.data[root.data.length - 1].progress;
+        summaryData.remaining = root.data[root.data.length - 1].remaining;
         summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
+        summaryData.percent = percentComplete(
+          summaryData.progress,
+          summaryData.total
+        );
       } else {
         summaryData.progress = 0;
         summaryData.remaining = 0;
@@ -327,28 +334,33 @@ class App extends React.Component {
       }
       for (var i = 0; i < root.children.length; i++) {
         var childData = traverse(root.children[i]);
-        summaryData.progress +=  childData.progress;
+        summaryData.progress += childData.progress;
         summaryData.remaining += childData.remaining;
         summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
+        summaryData.percent = percentComplete(
+          summaryData.progress,
+          summaryData.total
+        );
       }
       return summaryData;
     }
 
     function percentComplete(progress, total) {
       if (total == 0) {
-        return '0%'
+        return "0%";
       } else {
-        return String(100 * progress / total) + '%'
+        return String((100 * progress) / total) + "%";
       }
     }
 
     const root = this.retrieveNode(this.state.data, key);
     var final = traverse(root);
     return final;
-  }
-  
+  };
+
   render() {
+    console.dir(this.state.data);
+
     return (
       <AppContainer>
         <ProjectTree
@@ -362,8 +374,7 @@ class App extends React.Component {
           handleAddTopLevelProjectClick={this.handleAddTopLevelProjectClick}
           data={this.state.data}
           editing={this.state.editing}
-        >
-        </ProjectTree>
+        ></ProjectTree>
         <Tracking
           selected={this.state.selected}
           data={this.state.data}
@@ -380,17 +391,15 @@ class App extends React.Component {
           handleRemainingChange={this.handleRemainingChange}
           handleDeleteTrackingDatapoint={this.handleDeleteTrackingDatapoint}
           calculateSummaryData={this.calculateSummaryData}
-        >
-        </Tracking>
+        ></Tracking>
       </AppContainer>
-      
     );
-  } 
+  }
 }
 
 const AppContainer = styled.div`
-  width: 100%
-  display: inline-block
+  width: 100%;
+  display: inline-block;
 `;
 
 export default App;
