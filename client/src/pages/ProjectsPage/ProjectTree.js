@@ -102,7 +102,7 @@ function ProjectTree(props) {
                 <IconContainer>
                     <Icon 
                         type="delete"
-                        onClick={() => props.handleRemoveItemClick(node.key)}
+                        onClick={(e) => props.handleRemoveItemClick(node.key, e)}
                     ></Icon>
                 </IconContainer>
             </Group>
