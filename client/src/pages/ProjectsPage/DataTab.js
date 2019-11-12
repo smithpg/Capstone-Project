@@ -14,7 +14,12 @@ function DataTab(props) {
                         <td>{datapoint.username}</td>
                         <td>{datapoint.progress}</td>
                         <td>{datapoint.remaining}</td>
-                        <td></td>
+                        <td>
+                            <Icon 
+                                type="delete"
+                                onClick={() => props.handleDeleteTrackingDatapoint(node.key, datapoint.key)}
+                            ></Icon>
+                        </td>
                     </tr>
                 ))}
             </React.Fragment>
@@ -60,7 +65,7 @@ function DataTab(props) {
                             <th>Date</th>
                             <th>Username</th>
                             <th>Progress</th>
-                            <th>Submit</th>
+                            <th>Remaining</th>
                         </tr>
                     </thead>
                     <tbody>

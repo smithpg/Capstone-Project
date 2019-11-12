@@ -27,6 +27,7 @@ function Tracking(props) {
                 handleProgressChange={props.handleProgressChange}
                 handleRemainingChange={props.handleRemainingChange}
                 handleDeleteTrackingDatapoint={props.handleDeleteTrackingDatapoint}
+                dateInMillisFromString={props.dateInMillisFromString}
             ></DataTab>
         );
     }
@@ -38,6 +39,7 @@ function Tracking(props) {
                 selected={props.selected}
                 calculateSummaryData={props.calculateSummaryData}
                 retrieveNode={props.retrieveNode}
+                dateInMillisFromString={props.dateInMillisFromString}
             ></SummaryTab>
         );
     }
@@ -47,6 +49,7 @@ function Tracking(props) {
             <TrackingTab
                 selected={props.selected}
                 allDataPointsForNode={props.allDataPointsForNode}
+                dateInMillisFromString={props.dateInMillisFromString}
             >     
             </TrackingTab>
         )

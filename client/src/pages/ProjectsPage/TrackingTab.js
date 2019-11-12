@@ -7,7 +7,7 @@ function TrackingTab(props) {
     var data = props.allDataPointsForNode(props.selected);
 
     data.map(datapoint => {
-        datapoint.datemillis = dateInMillisFromString(datapoint.date);
+        datapoint.datemillis = props.dateInMillisFromString(datapoint.date);
     })
     data.sort((a,b) => {
         return a.datemillis - b.datemillis;
@@ -61,14 +61,6 @@ function TrackingTab(props) {
             options={options}
         />
     );
-}
-
-function dateInMillisFromString(dateStr) {
-    const components = dateStr.split("-");
-    const year = parseInt(components[0])
-    const month = parseInt(components[1]) - 1;
-    const day = parseInt(components[2]);
-    return (new Date(year, month, day)).getTime();
 }
 
 function squash(datapoints) {

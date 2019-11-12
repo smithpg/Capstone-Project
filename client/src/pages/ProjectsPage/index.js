@@ -54,6 +54,7 @@ class ProjectsPage extends React.Component {
           handleDeleteTrackingDatapoint={this.handleDeleteTrackingDatapoint}
           calculateSummaryData={this.calculateSummaryData}
           allDataPointsForNode={this.allDataPointsForNode}
+          dateInMillisFromString={this.dateInMillisFromString}
         >
         </Tracking>
       </AppContainer>
@@ -290,6 +291,7 @@ class ProjectsPage extends React.Component {
     trackingData.key = Math.floor(Math.random()*1000);
     const node = this.retrieveNode(this.state.data, this.state.selected);
     node.data.splice(node.data.length, 0, trackingData);
+    node.data = this.sortTrackingData(node.data);
     this.setState({
       formValues: {
         date: '',
@@ -299,6 +301,24 @@ class ProjectsPage extends React.Component {
       }
     });
   }
+
+  // sort tracking data by date
+  sortTrackingData = data => {
+    var trackingData = Array.from(data);
+    trackingData.sort((a,b) => {
+      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
+    });
+    return trackingData;
+  }
+
+  // calulate date in milliseconds from date string
+  dateInMillisFromString = dateStr => {
+    const components = dateStr.split("-");
+    const year = parseInt(components[0])
+    const month = parseInt(components[1]) - 1;
+    const day = parseInt(components[2]);
+    return (new Date(year, month, day)).getTime();
+}
 
   // handle date entry
   handleDateChange = event => {
@@ -364,14 +384,14 @@ class ProjectsPage extends React.Component {
   }
 
   // calculate summary data for a node
-  // progress and remaining are summation of progress and remaining of 
-  // node and all children
+  // progress is summation of all progress datapoints
+  // remaining is most recent remaining datapoint
   calculateSummaryData = key => {
 
     function traverse(root) {
       var summaryData = {};
       if (root.data.length > 0) {
-        summaryData.progress = root.data[root.data.length-1].progress;
+        summaryData.progress = sumProgress(root.data);
         summaryData.remaining = root.data[root.data.length-1].remaining;
         summaryData.total = summaryData.progress + summaryData.remaining;
         summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
@@ -395,8 +415,14 @@ class ProjectsPage extends React.Component {
       if (total == 0) {
         return '0%'
       } else {
-        return String(100 * progress / total) + '%'
+        return String(Math.round(100 * 100 * progress / total) / 100) + '%';
       }
+    }
+
+    function sumProgress(data) {
+      var sum = 0;
+      data.map(p => sum += p.progress);
+      return sum;
     }
 
     const data = Array.from(this.state.data);
@@ -419,8 +445,6 @@ class ProjectsPage extends React.Component {
     return collect(node, []);
   }
 }
-
-
 
 const AppContainer = styled.div`
   width: 100%
