@@ -4,55 +4,32 @@ const chai = require("chai");
 const chaiHttp = require("chai-http");
 const app = require("../../app.js");
 
+const helpers = require("../testHelpers");
+
 chai.should();
 chai.use(chaiHttp);
 
-/**
- *  Create a dummy task for testing purposes
- */
-
-const taskId = await createDummyTask();
-
-/**
- *    Test task creation
- * */
-
 describe("POST to /api/tasks/:task_id/reports", () => {
-  const eventualRes = chai
-    .request(app)
-    .post(`/api/tasks/${taskId}/reports`)
-    .send(validReport);
+  let dummyProject, response;
 
-  it("it should have status 201", done => {
-    eventualRes.then(res => {
-      try {
-        res.should.have.status(201);
-        done();
-      } catch (e) {
-        done(e);
-      }
-    });
+  before(async () => {
+    dummyProject = await helpers.createDummyProject();
+
+    response = await chai
+      .request(app)
+      .post(
+        `/api/projects/${dummyProject.id}/tasks/${dummyProject.descendentTaskId}/reports`
+      )
+      .send(validReport);
   });
 
-  it("it should be TYPE = JSON", done => {
-    eventualRes.then(res => {
-      try {
-        res.should.be.json;
-        done();
-      } catch (e) {
-        done(e);
-      }
-    });
+  after(helpers.teardownDb);
+
+  it("it should have status 201", () => {
+    response.should.have.status(201);
   });
+
+  it("it should be TYPE = JSON", () => response.should.be.json);
 });
-
-function createDummyTask() {
-  //TODO: This function should make use of create method on
-  // the appropriate model
-
-  taskId = "23048203"; // totally fake for now
-
-  return taskId;
-}
 
 const validReport = { progress: 3, remaining: 2 };
