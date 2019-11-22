@@ -531,8 +531,6 @@ class ProjectsPage extends React.Component {
     
     const root = this.retrieveRoot(this.state.data, this.state.selected);
 
-    console.log(this.state.formValues);
-
     if (this.state.formValues.read && 
       !contains(root.readPermissions, this.state.formValues.usernamePerm)) {
         
@@ -584,7 +582,6 @@ class ProjectsPage extends React.Component {
   }
 
   handleWritePermissionChange = event => {
-    console.log("im being called")
     this.setState({
       formValues: {
         usernamePerm: this.state.formValues.usernamePerm,

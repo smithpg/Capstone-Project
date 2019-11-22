@@ -6,7 +6,6 @@ function PermissionsTab(props) {
 
     function renderReadPermissionsData() {
         const node = props.retrieveRoot(props.data, props.selected);
-        console.log(props.formValues)
         return (
             <React.Fragment>
                 {node.readPermissions.map(user => (
@@ -26,7 +25,6 @@ function PermissionsTab(props) {
 
     function renderWritePermissionsData() {
         const node = props.retrieveRoot(props.data, props.selected);
-        console.log(props.formValues)
         return (
             <React.Fragment>
                 {node.writePermissions.map(user => (
