@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import DataTab from './DataTab'
 import SummaryTab from './SummaryTab'
 import TrackingTab from './TrackingTab'
+import PermissionsTab from './PermissionsTab'
 
 function Tracking(props) {
 
@@ -55,6 +56,24 @@ function Tracking(props) {
         )
     }
 
+    function renderPermissionsTab() {
+        return (
+            <PermissionsTab
+                data={props.data}
+                selected={props.selected}
+                retrieveRoot={props.retrieveRoot}
+                handlePermissionFormSubmit={props.handlePermissionFormSubmit}
+                handleUsernamePermChange={props.handleUsernamePermChange}
+                handleReadPermissionChange={props.handleReadPermissionChange}
+                handleWritePermissionChange={props.handleWritePermissionChange}
+                handleDeleteReadPermission={props.handleDeleteReadPermission}
+                handleDeleteWritePermission={props.handleDeleteWritePermission}
+                formValues={props.formValues}
+            >
+            </PermissionsTab>
+        );
+    }
+
     function renderTab() {
         if (props.selected != null) {
             if (props.selectedTab == 'data') {
@@ -63,6 +82,8 @@ function Tracking(props) {
                 return renderSummaryTab();
             } else if (props.selectedTab == 'tracking') {
                 return renderTrackingTab();
+            } else if (props.selectedTab == 'permissions') {
+                return renderPermissionsTab();
             }
         }
     }
@@ -79,6 +100,9 @@ function Tracking(props) {
                 <Tab
                     onClick={() => props.handleTrackingTabClick()}
                 >Tracking</Tab>
+                <Tab
+                    onClick={() => props.handlePermissionsTabClick()}
+                >Permissions</Tab>
             </TabGroup>
             <TitleContainer>
                 {renderTitle()}
@@ -100,10 +124,12 @@ const TabGroup = styled.div`
 `;
 
 const Tab = styled.button`
-    border: solid gray 1px
-    background: none
+    border: solid 1px
+    background-color: LightGray
     border-radius: 8px
     margin: 2px
+    font-weight: bold
+    focus-outline: 0;
 `;
 
 const TitleContainer = styled.div`

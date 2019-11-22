@@ -16,7 +16,10 @@ class ProjectsPage extends React.Component {
         date: '',
         username: '',
         progress: '',
-        remaining: ''
+        remaining: '',
+        usernamePerm: '',
+        read: false,
+        write: false,
       }
     };
   }
@@ -46,6 +49,7 @@ class ProjectsPage extends React.Component {
           handleSummaryTabClick={this.handleSummaryTabClick}
           handleDataTabClick={this.handleDataTabClick}
           handleTrackingTabClick={this.handleTrackingTabClick}
+          handlePermissionsTabClick={this.handlePermissionsTabClick}
           handleFormSubmit={this.handleFormSubmit}
           handleDateChange={this.handleDateChange}
           handleUsernameChange={this.handleUsernameChange}
@@ -55,6 +59,13 @@ class ProjectsPage extends React.Component {
           calculateSummaryData={this.calculateSummaryData}
           allDataPointsForNode={this.allDataPointsForNode}
           dateInMillisFromString={this.dateInMillisFromString}
+          retrieveRoot={this.retrieveRoot}
+          handlePermissionFormSubmit={this.handlePermissionFormSubmit}
+          handleUsernamePermChange={this.handleUsernamePermChange}
+          handleReadPermissionChange={this.handleReadPermissionChange}
+          handleWritePermissionChange={this.handleWritePermissionChange}
+          handleDeleteReadPermission={this.handleDeleteReadPermission}
+          handleDeleteWritePermission={this.handleDeleteWritePermission}
         >
         </Tracking>
       </AppContainer>
@@ -190,7 +201,14 @@ class ProjectsPage extends React.Component {
   handleAddChildClick = (parentKey, event) => {
     var data = Array.from(this.state.data);
     const parent = this.retrieveNode(data, parentKey);
-    const newNode = {key: Math.floor(Math.random()*1000), content: "new content", children: [], data: []};
+    const newNode = {
+      key: Math.floor(Math.random()*1000), 
+      content: "new content", 
+      children: [], 
+      data: [],
+      readPermissions: [],
+      writePermissions: [],
+    };
     
     parent.children.splice(parent.children.length, 0, newNode);
     
@@ -255,7 +273,14 @@ class ProjectsPage extends React.Component {
   handleAddTopLevelProjectClick = () => {
     var data = Array.from(this.state.data);
     
-    const newNode = {key: Math.floor(Math.random()*1000), content: "new content", children: [], data: []};
+    const newNode = {
+      key: Math.floor(Math.random()*1000), 
+      content: "new content", 
+      children: [], 
+      data: [],
+      readPermissions: [],
+      writePermissions: [],
+    };
     data.splice(data.length, 0, newNode);
     
     this.setState({
@@ -284,10 +309,20 @@ class ProjectsPage extends React.Component {
     })
   }
 
+  handlePermissionsTabClick = () => {
+    this.setState({
+      selectedTab: "permissions"
+    })
+  }
+
   // handle adding data for an item
   handleFormSubmit = event => {
     event.preventDefault();
-    const trackingData = this.state.formValues;
+    const trackingData = {};
+    trackingData.username = this.state.formValues.username;
+    trackingData.date = this.state.formValues.date;
+    trackingData.progress = this.state.formValues.progress;
+    trackingData.remaining = this.state.formValues.remaining;
     trackingData.key = Math.floor(Math.random()*1000);
     const node = this.retrieveNode(this.state.data, this.state.selected);
     node.data.splice(node.data.length, 0, trackingData);
@@ -444,7 +479,122 @@ class ProjectsPage extends React.Component {
     const node = this.retrieveNode(data, key);
     return collect(node, []);
   }
+
+  retrieveRoot = (data, key) => {
+    
+    function isChild(data, key) {
+      for (var i = 0; i < data.length; i++) {
+        if (data[i].key == key || isChild(data[i].children, key)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].key == key || isChild(data[i].children, key)) {
+        return data[i];
+      }
+    }
+  }
+
+  handleDeleteReadPermission = (key, user) => {
+    const data = Array.from(this.state.data);
+    const node = this.retrieveRoot(data, key);
+    for (var i = 0; i < node.readPermissions.length; i++) {
+      if (node.readPermissions[i] == user) {
+        node.readPermissions.splice(i, 1);
+        break;
+      }
+    }
+    this.setState({
+      data: data
+    })
+  }
+
+  handleDeleteWritePermission = (key, user) => {
+    const data = Array.from(this.state.data);
+    const node = this.retrieveRoot(data, key);
+    for (var i = 0; i < node.writePermissions.length; i++) {
+      if (node.writePermissions[i] == user) {
+        node.writePermissions.splice(i, 1);
+        break;
+      }
+    }
+    this.setState({
+      data: data
+    })
+  }
+
+  handlePermissionFormSubmit = event => {
+    event.preventDefault();
+    
+    const root = this.retrieveRoot(this.state.data, this.state.selected);
+
+    console.log(this.state.formValues);
+
+    if (this.state.formValues.read && 
+      !contains(root.readPermissions, this.state.formValues.usernamePerm)) {
+        
+        root.readPermissions.splice(root.readPermissions.length, 0, this.state.formValues.usernamePerm)
+    }
+
+    if (this.state.formValues.write && 
+      !contains(root.writePermissions, this.state.formValues.usernamePerm)) {
+        
+        root.writePermissions.splice(root.writePermissions.length, 0, this.state.formValues.usernamePerm)
+    }
+
+    this.setState({
+      formValues: {
+        usernamePerm: '',
+        read: false,
+        write: false,
+      }
+    });
+
+    function contains(arr, val) {
+      for (var i = 0; i < arr.length; i++) {
+        if (arr[i] == val) {
+          return true;
+        }
+      }
+      return false;
+    }
+  }
+
+  handleUsernamePermChange = event => {
+    this.setState({
+      formValues: {
+        usernamePerm: event.target.value,
+        read: this.state.formValues.read,
+        write: this.state.formValues.write,
+      }
+    });
+  }
+
+  handleReadPermissionChange = event => {
+    this.setState({
+      formValues: {
+        usernamePerm: this.state.formValues.usernamePerm,
+        read: event.target.checked,
+        write: this.state.formValues.write,
+      }
+    });
+  }
+
+  handleWritePermissionChange = event => {
+    console.log("im being called")
+    this.setState({
+      formValues: {
+        usernamePerm: this.state.formValues.usernamePerm,
+        read: this.state.formValues.read,
+        write: event.target.checked,
+      }
+    });
+  }
 }
+
 
 const AppContainer = styled.div`
   width: 100%
