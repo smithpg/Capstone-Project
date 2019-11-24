@@ -9,7 +9,13 @@ const taskSchema = Schema(
     },
 
     parent: {
-      type: this
+      type: this,
+      set: function(newParentId) {
+        // store the previous parent's id when updating `parent` field
+        this._previousParent = this.parent;
+
+        return newParentId;
+      }
     },
 
     project: {
@@ -29,40 +35,40 @@ const taskSchema = Schema(
   { timestamps: true }
 );
 
-taskSchema.methods.getFullyPopulatedSubtree = async function() {
-  await this.populate("reports");
-
-  // if the task has children ...
-  if (this.children) {
-    let children = await mongoose // ... retrieve them ...
-      .model("Task")
-      .find({ parent: this.id });
-
-    children = await Promise.all(
-      children.map(child => child.getFullyPopulatedSubtree()) // .. and recurse.
-    );
-
-    return {
-      ...this._doc,
-      children
-    };
-  } else {
-    return this;
-  }
-};
-
-// taskSchema.pre("find", async function() {
-//   // console.log("inside find hook");
-
-//   await this.populate("children reports");
-// });
-
 taskSchema.pre("save", async function() {
   if (this.isNew && this.parent) {
     /**
       Add taskId to children array on parent document
     */
 
+    await mongoose.model("Task").findById(this.parent, (err, document) => {
+      if (err) {
+        console.error(err);
+      }
+
+      document.children = [...document.children, this.id];
+      document.save();
+    });
+  } else if (this.parent && this.isModified("parent")) {
+    // If the parent property has been modified, this means the
+    // task has been relocated within the tree; so we need to
+    // remove this task from the `children` array of the previous parent ...
+
+    await mongoose
+      .model("Task")
+      .findById(this._previousParent, (err, document) => {
+        if (err) {
+          console.error(err);
+        }
+
+        document.children = [
+          ...document.children.filter(childId => childId !== this.id)
+        ];
+
+        document.save();
+      });
+
+    // ... and add it to the `children` array of the new one.
     await mongoose.model("Task").findById(this.parent, (err, document) => {
       if (err) {
         console.error(err);
@@ -87,8 +93,6 @@ taskSchema.post("remove", async function() {
   /**
   Delete any descendent tasks
   */
-
-  // const children = await mongoose.model("Task").find({ parent: this.id });
 
   for (let childId of this.children) {
     await mongoose.model("Task").findById(childId, (err, res) => res.remove());
