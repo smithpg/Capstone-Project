@@ -3,13 +3,13 @@ const { Schema } = mongoose;
 
 const reportSchema = Schema(
   {
-    task: { type: Schema.Types.ObjectId, ref: "Task" },
+    task: { type: Schema.Types.ObjectId, ref: "Task", required: true },
 
-    date: Date,
+    date: { type: Date, required: true },
 
-    remaining: Number,
+    remaining: { type: Number, required: true },
 
-    progress: Number
+    progress: { type: Number, required: true }
   },
   { timestamps: true }
 );
