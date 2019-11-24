@@ -35,11 +35,11 @@ router.put("/:task_id", userHasPermission("EDIT"), async (req, res, next) => {
 
   try {
     //Attempt to update the task
-    const task = await Task.findByIdAndUpdate(req.params.task_id, req.body, {
-      new: true
-    });
+    const task = await Task.findById(req.params.task_id);
 
-    res.status(204).json(task);
+    Object.assign(task, req.body);
+
+    res.status(204).send();
   } catch (error) {
     return next(createError(500, error));
   }
@@ -63,6 +63,15 @@ router.post(
   async (req, res, next) => {
     await Report.create({ ...req.body, task: req.params.task_id });
     res.status(201).send({ success: true });
+  }
+);
+
+router.put(
+  "/:task_id/reports/:report_id",
+  userHasPermission("EDIT"),
+  async (req, res, next) => {
+    await Report.findByIdAndUpdate(req.params.report_id, req.body);
+    res.status(204).send();
   }
 );
 
