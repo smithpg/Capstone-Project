@@ -52,7 +52,7 @@ module.exports.userIsAuthorized = function(req, res, next) {
 };
 
 async function userHasPermission(userId, projectId, permissionLevel) {
-  const project = Project.findById(projectId).populate();
+  const project = await Project.findById(projectId).populate();
 
   return project.permissions.some(
     permission =>
