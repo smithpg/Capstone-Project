@@ -1,5 +1,26 @@
-jwt = require("jsonwebtoken");
-createError = require("http-errors");
+const jwt = require("jsonwebtoken");
+const createError = require("http-errors");
+const { Project } = require("../data");
+
+const { permissions } = require("../constants");
+
+module.exports.userHasPermission = () => (req, res, next) => next(); //Hasty mock
+
+// module.exports.userHasPermission = function(permissionLevel) {
+//   return async function(req, res, next) {
+//     if (
+//       await userHasPermission(
+//         req.decoded._id,
+//         req.params.project_id,
+//         permissionLevel
+//       )
+//     ) {
+//       return next();
+//     } else {
+//       return next(createError(403, "Unauthorized"));
+//     }
+//   };
+// };
 
 module.exports.decodeToken = async function(req, res, next) {
   try {
@@ -23,8 +44,26 @@ module.exports.userIsAuthorized = function(req, res, next) {
     params: { userId },
     decoded
   } = req;
-  console.log("Userid and 403",userId,decoded._id);
+
+  console.log("Userid and 403", userId, decoded._id);
   if (userId !== decoded._id) {
     return next(createError(403, "Unauthorized."));
   } else return next();
 };
+
+async function userHasPermission(userId, projectId, permissionLevel) {
+  const project = await Project.findById(projectId).populate();
+
+  return project.permissions.some(
+    permission =>
+      permission.user === userId &&
+      permissionIsSufficient(permission.level, permissionLevel)
+  );
+}
+
+function permissionIsSufficient(requiredPermission, actualPermission) {
+  return (
+    permissions.indexOf(requiredPermission) >=
+    permissions.indexOf(actualPermission)
+  );
+}

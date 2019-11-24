@@ -2,60 +2,63 @@ require("dotenv").config();
 
 const chai = require("chai");
 const chaiHttp = require("chai-http");
-const _ = require("lodash");
 const app = require("../../app.js");
+
+const helpers = require("../testHelpers");
 
 chai.should();
 chai.use(chaiHttp);
 
-/**
- *  Create a dummy task for testing purposes
- */
+describe("POST to /api/projects/:project_id/tasks/:task_id/reports", () => {
+  let dummyProject, response;
 
-(async function() {
-  const taskId = await createDummyTask();
+  before(async () => {
+    dummyProject = await helpers.createDummyProject();
 
-  /**
-   *    Test task creation
-   * */
-
-  describe("POST to /api/tasks/:task_id/reports", () => {
-    const eventualRes = chai
+    response = await chai
       .request(app)
-      .post(`/api/tasks/${taskId}/reports`)
+      .post(
+        `/api/projects/${dummyProject.id}/tasks/${dummyProject.descendentTaskId}/reports`
+      )
       .send(validReport);
-
-    it("it should have status 201", done => {
-      eventualRes.then(res => {
-        try {
-          res.should.have.status(201);
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
-    });
-
-    it("it should be TYPE = JSON", done => {
-      eventualRes.then(res => {
-        try {
-          res.should.be.json;
-          done();
-        } catch (e) {
-          done(e);
-        }
-      });
-    });
+    console.log(response.body);
   });
-})();
 
-function createDummyTask() {
-  //TODO: This function should make use of create method on
-  // the appropriate model
+  after(helpers.teardownDb);
 
-  taskId = "23048203"; // totally fake for now
+  it("it should have status 201", () => {
+    response.should.have.status(201);
+  });
 
-  return taskId;
-}
+  it("it should be TYPE = JSON", () => response.should.be.json);
+});
 
-const validReport = { progress: 3, remaining: 2 };
+describe("PUT to /api/projects/:project_id/tasks/:task_id/reports/report_id", () => {
+  let dummyProject, response;
+
+  before(async () => {
+    dummyProject = await helpers.createDummyProject();
+
+    const report = await helpers.createDummyReport(
+      dummyProject.descendentTaskId
+    );
+
+    response = await chai
+      .request(app)
+      .put(
+        `/api/projects/${dummyProject.id}/tasks/${dummyProject.descendentTaskId}/reports/${report.id}`
+      )
+      .send(validReportUpdate);
+
+    console.log(response.body);
+  });
+
+  after(helpers.teardownDb);
+
+  it("it should have status 204", () => {
+    response.should.have.status(204);
+  });
+});
+
+const validReport = { progress: 3, remaining: 2, date: Date.now() };
+const validReportUpdate = { progress: 99, remaining: 0 };

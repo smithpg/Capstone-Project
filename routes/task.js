@@ -2,30 +2,81 @@ const express = require("express");
 const router = express.Router();
 const Joi = require("joi");
 const createError = require("http-errors");
-const { decodeToken, userIsAuthorized } = require("../middleware/auth");
+
+const { Task, Report } = require("../data");
+
+const { userHasPermission } = require("../middleware/auth");
 
 /**
  * POST to /task to create a new task
  */
-router.post("/", decodeToken, async (req, res, next) => {
-  const { body, decoded } = req;
-  const { error } = validatetask(body);
+router.post("/", userHasPermission("EDIT"), async (req, res, next) => {
+  const { error } = validatetask(req.body);
   if (error) return next(createError(400, error.details[0].message));
 
   /**
    *    Attempt to create the task
    */
 
-  // const task = someDbCall()
+  const newTask = await Task.create({
+    ...req.body,
+    project: req.params.project_id
+  });
 
   /**
    *    Return success message
    */
-  res.status(201).send(task);
+  res.status(201).send(newTask);
 });
 
+router.put("/:task_id", userHasPermission("EDIT"), async (req, res, next) => {
+  const { error } = validatetask(req.body);
+  if (error) return next(createError(400, error.details[0].message));
+
+  try {
+    //Attempt to update the task
+    const task = await Task.findById(req.params.task_id);
+
+    Object.assign(task, req.body);
+
+    res.status(204).send();
+  } catch (error) {
+    return next(createError(500, error));
+  }
+});
+
+router.delete(
+  "/:task_id",
+  userHasPermission("ADMIN"),
+  async (req, res, next) => {
+    const task = Task.findById(req.params.task_id);
+
+    task.remove();
+
+    res.status(204).send("Task deleted");
+  }
+);
+
+router.post(
+  "/:task_id/reports",
+  userHasPermission("EDIT"),
+  async (req, res, next) => {
+    await Report.create({ ...req.body, task: req.params.task_id });
+    res.status(201).send({ success: true });
+  }
+);
+
+router.put(
+  "/:task_id/reports/:report_id",
+  userHasPermission("EDIT"),
+  async (req, res, next) => {
+    await Report.findByIdAndUpdate(req.params.report_id, req.body);
+    res.status(204).send();
+  }
+);
+
 const taskSchema = Joi.compile({
-  name: Joi.string().required()
+  title: Joi.string().required()
 });
 function validatetask(task) {
   return Joi.validate(task, taskSchema);

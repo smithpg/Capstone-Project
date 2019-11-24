@@ -1,3 +1,3 @@
 module.exports = {
-  taskRouter: require("./task")
+  projectRouter: require("./project")
 };
