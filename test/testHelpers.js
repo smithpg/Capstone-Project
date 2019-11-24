@@ -100,6 +100,8 @@ function createDummyReport(taskId) {
   });
 }
 
+module.exports.createDummyReport = createDummyReport;
+
 module.exports.countNodes = tree => {
   let total = 0;
 

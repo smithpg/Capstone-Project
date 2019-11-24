@@ -49,7 +49,7 @@ describe("GET to /api/projects/:project_id", () => {
 
 /**
  *  Test project modification
-//  */
+ */
 describe("PUT to /api/projects/:project_id", () => {
   let dummyProject, response;
   before(async function() {
@@ -63,9 +63,9 @@ describe("PUT to /api/projects/:project_id", () => {
   it("it should have status 204", () => response.should.have.status(204));
 });
 
-// /**
-//  *  Test project deletion
-//  */
+/**
+ *  Test project deletion
+ */
 describe("DELETE to /api/projects/:project_id", () => {
   let dummyProject, response;
   before(async function() {

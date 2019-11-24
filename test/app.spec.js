@@ -11,19 +11,14 @@ chai.use(chaiHttp);
 /**
  *  Test that request to root path returns .html file
  */
-describe("GET to /", () => {
-  const eventualRes = chai.request(app).get("/");
+describe("GET to /", async () => {
+  let response;
 
-  it("it should have status 200", done => {
-    eventualRes.then(res => {
-      res.should.have.status(200);
-      done();
-    });
+  before(async () => {
+    response = await chai.request(app).get("/");
   });
-  it("it should be TYPE = HTML", done => {
-    eventualRes.then(res => {
-      res.should.be.html;
-      done();
-    });
-  });
+
+  it("it should have status 200", () => response.should.have.status(200));
+
+  it("it should be TYPE = HTML", () => response.should.be.html);
 });

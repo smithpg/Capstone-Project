@@ -9,7 +9,7 @@ const helpers = require("../testHelpers");
 chai.should();
 chai.use(chaiHttp);
 
-describe("POST to /api/tasks/:task_id/reports", () => {
+describe("POST to /api/projects/:project_id/tasks/:task_id/reports", () => {
   let dummyProject, response;
 
   before(async () => {
@@ -21,6 +21,7 @@ describe("POST to /api/tasks/:task_id/reports", () => {
         `/api/projects/${dummyProject.id}/tasks/${dummyProject.descendentTaskId}/reports`
       )
       .send(validReport);
+    console.log(response.body);
   });
 
   after(helpers.teardownDb);
@@ -32,4 +33,32 @@ describe("POST to /api/tasks/:task_id/reports", () => {
   it("it should be TYPE = JSON", () => response.should.be.json);
 });
 
-const validReport = { progress: 3, remaining: 2 };
+describe("PUT to /api/projects/:project_id/tasks/:task_id/reports/report_id", () => {
+  let dummyProject, response;
+
+  before(async () => {
+    dummyProject = await helpers.createDummyProject();
+
+    const report = await helpers.createDummyReport(
+      dummyProject.descendentTaskId
+    );
+
+    response = await chai
+      .request(app)
+      .put(
+        `/api/projects/${dummyProject.id}/tasks/${dummyProject.descendentTaskId}/reports/${report.id}`
+      )
+      .send(validReportUpdate);
+
+    console.log(response.body);
+  });
+
+  after(helpers.teardownDb);
+
+  it("it should have status 204", () => {
+    response.should.have.status(204);
+  });
+});
+
+const validReport = { progress: 3, remaining: 2, date: Date.now() };
+const validReportUpdate = { progress: 99, remaining: 0 };
