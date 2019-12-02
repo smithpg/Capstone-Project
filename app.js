@@ -9,40 +9,15 @@ const { projectRouter } = require("./routes");
 const app = express();
 const passport = require('passport');
 const auth = require('./auth');
-const cookieSession = require('cookie-session');
 
 auth(passport);
+
+app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+
 app.use(passport.initialize());
+app.use(passport.session());
 
 
-//Open Database in memory
-// let db = new sqlite3.Database('./db/perro.db', (err) => {
-//     if (err) {
-//         return console.error(err.message);
-//     }
-//     console.log('Connected to the in-memory SQlite database.');
-// });
-
-// //SQL Statement
-// let sql = `SELECT * FROM Users`;
-
-// //Log statement to console
-// db.all(sql, [], (err, rows) => {
-//   if (err) {
-//     throw err;
-//   }
-//   rows.forEach((row) => {
-//     console.log(row);
-//   });
-// });
-
-// // close the database connection
-// db.close((err) => {
-//   if (err) {
-//     return console.error(err.message);
-//   }
-//   console.log('Close the database connection.');
-// });
 
 if (process.env.NODE_ENV === "development") {
   app.use(logger("dev"));
@@ -54,13 +29,6 @@ app.use(cookieParser());
 
 app.use("/api/projects", projectRouter);
 
-
-
-app.use(cookieSession({
-    name: 'session',
-    keys: ['SECRECT KEY'],
-    maxAge: 24 * 60 * 60 * 1000
-}));
 app.use(cookieParser());
 
 app.get("/login", (req, res) => {
