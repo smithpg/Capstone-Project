@@ -1,15 +1,12 @@
 const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
-const { Project } = require("../data");
 
-const { permissions } = require("../constants");
-
-// module.exports.userHasPermission = () => (req, res, next) => next(); //Hasty mock
+const helpers = require("../helpers/authHelpers");
 
 module.exports.userHasPermission = function(permissionLevel) {
   return async function(req, res, next) {
     if (
-      await checkPermission(
+      await helpers.checkPermission(
         req.decoded._id,
         req.params.project_id,
         permissionLevel
@@ -34,22 +31,3 @@ module.exports.decodeToken = async function(req, res, next) {
     return next(createError(401, "Sign in first."));
   }
 };
-
-async function checkPermission(userId, projectId, requiredPermission) {
-  const project = await Project.findById(projectId).populate();
-
-  return project.permissions.some(
-    permission =>
-      permission.user === userId &&
-      permissionIsSufficient(requiredPermission, permission.level)
-  );
-}
-
-function permissionIsSufficient(requiredPermission, actualPermission) {
-  return (
-    permissions.indexOf(requiredPermission) >=
-    permissions.indexOf(actualPermission)
-  );
-}
-
-module.exports.checkPermission = checkPermission;
