@@ -2,9 +2,10 @@ const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 const logger = require("morgan");
 
-const { projectRouter } = require("./routes");
+const apiRouter = require("./routes");
 
 const app = express();
 
@@ -41,11 +42,12 @@ if (process.env.NODE_ENV === "development") {
   app.use(logger("dev"));
 }
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api/projects", projectRouter);
+app.use("/api", apiRouter);
 
 app.use(express.static(path.join(__dirname, "client/build")));
 
@@ -71,12 +73,6 @@ app.use(function(err, req, res, next) {
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "client/public/index.html"));
-});
-
-// Listen to the App Engine-specified port, or 8080 otherwise
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}...`);
 });
 
 module.exports = app;

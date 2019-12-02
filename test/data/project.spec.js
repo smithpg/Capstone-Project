@@ -1,4 +1,4 @@
-const helpers = require("../testHelpers");
+const testHelpers = require("../testHelpers");
 const Task = require("../../data/task");
 const Report = require("../../data/report");
 const Project = require("../../data/project");
@@ -9,25 +9,18 @@ describe("On deletion of a project document", () => {
   let dummyProject;
 
   beforeEach(async () => {
-    dummyProject = await helpers.createDummyProject(15);
+    dummyProject = await testHelpers.createDummyProject(15);
   });
 
-  afterEach(helpers.teardownDb); // drop everything
+  afterEach(testHelpers.teardownDb); // drop everything
 
   it("associated tasks should also be deleted", async function() {
     dummyProject.delete();
 
-    await new Promise((resolve, reject) => {
-      setTimeout(() => {
-        Task.find({ project: dummyProject.id }, (err, res) => {
-          try {
-            expect(res).to.be.empty;
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        });
-      }, 1000);
+    await testHelpers.delay(1000);
+
+    return Task.find({ project: dummyProject.id }, (err, res) => {
+      expect(res).to.be.empty;
     });
   });
 });
@@ -37,14 +30,16 @@ describe("generateProjectTree()", () => {
   const numNodesInDummyProject = 150;
 
   before(async () => {
-    dummyProject = await helpers.createDummyProject(numNodesInDummyProject);
+    dummyProject = await testHelpers.createDummyProject(numNodesInDummyProject);
   });
 
-  after(helpers.teardownDb); // drop everything
+  after(testHelpers.teardownDb); // drop everything
 
   it("should return fully populated tree", async function() {
     const returnedTree = await dummyProject.doc.generateProjectTree();
 
-    expect(helpers.countNodes(returnedTree)).to.equal(numNodesInDummyProject);
+    expect(testHelpers.countNodes(returnedTree)).to.equal(
+      numNodesInDummyProject
+    );
   });
 });

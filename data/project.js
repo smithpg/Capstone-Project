@@ -6,9 +6,7 @@ const projectSchema = Schema(
     title: {
       type: String,
       required: true
-    },
-
-    permissions: [{ type: Schema.Types.ObjectId, ref: "Permission" }]
+    }
   },
   { timestamps: true }
 );

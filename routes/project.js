@@ -15,7 +15,7 @@ const taskRouter = require("./task");
     decode auth token before passing request to HTTP method handler
 */
 
-// router.use(decodeToken);
+router.use(decodeToken);
 
 /**
  * GET to /project/:project_id to retrieve a full project tree
