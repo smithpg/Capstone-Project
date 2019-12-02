@@ -14,6 +14,7 @@ const cookieSession = require('cookie-session');
 auth(passport);
 app.use(passport.initialize());
 
+
 //Open Database in memory
 // let db = new sqlite3.Database('./db/perro.db', (err) => {
 //     if (err) {
@@ -85,7 +86,7 @@ app.get('/auth/google/callback',
         failureRedirect: '/'
     }),
     (req, res) => {
-        console.log(req.user.token);
+        //console.log(req.user.token);
         req.session.token = req.user.token;
         res.redirect('/projects');
     }

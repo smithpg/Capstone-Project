@@ -9,8 +9,8 @@ module.exports = function (passport) {
         done(null, user);
     });
     passport.use(new GoogleStrategy({
-        clientID: "466543474928-earbrglh2ns7dofqdlrlao55au8bk52s.apps.googleusercontent.com",
-        clientSecret: "WKeJ_Nizpynp2xjUg9RAVWQH",
+        clientID: process.env.REACT_APP_CLIENT_ID,
+        clientSecret: process.env.REACT_APP_CLIENT_SECRET,
         callbackURL: '/auth/google/callback'
     }, (token, refreshToken, profile, done) => {
         return done(null, {
