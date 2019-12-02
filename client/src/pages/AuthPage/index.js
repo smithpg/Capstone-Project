@@ -29,13 +29,9 @@ function AuthPage(props) {
     <PageContainer>
       <SignInContainer className="pageContainer">
         <h1>Welcome to Perro Project</h1>
-        <GoogleButtonContainer>
-          <div class="g-signin2" data-onsuccess="onSignIn" data-theme="dark"></div>
-          
-        </GoogleButtonContainer>
-        <Link to="projects">
-          <button>Temporary Authenticate</button>
-        </Link>
+        <a href="/auth/google">
+          <button>Authenticate</button>
+        </a>
       </SignInContainer>
     </PageContainer>
     

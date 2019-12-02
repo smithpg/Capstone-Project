@@ -7,6 +7,12 @@ const logger = require("morgan");
 const { projectRouter } = require("./routes");
 
 const app = express();
+const passport = require('passport');
+const auth = require('./auth');
+const cookieSession = require('cookie-session');
+
+auth(passport);
+app.use(passport.initialize());
 
 //Open Database in memory
 // let db = new sqlite3.Database('./db/perro.db', (err) => {
@@ -47,6 +53,50 @@ app.use(cookieParser());
 
 app.use("/api/projects", projectRouter);
 
+
+
+app.use(cookieSession({
+    name: 'session',
+    keys: ['SECRECT KEY'],
+    maxAge: 24 * 60 * 60 * 1000
+}));
+app.use(cookieParser());
+
+app.get("/login", (req, res) => {
+	res.redirect('/');
+})
+
+app.get("/", (req, res, next) => {
+	if (req.session.token) {
+        res.cookie('token', req.session.token);
+        res.redirect('/projects');
+    } else {
+        res.cookie('token', '')
+        res.redirect('/auth/google');
+    }
+});
+
+app.get('/auth/google', passport.authenticate('google', {
+    scope: ['profile']
+}));
+
+app.get('/auth/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: '/'
+    }),
+    (req, res) => {
+        console.log(req.user.token);
+        req.session.token = req.user.token;
+        res.redirect('/projects');
+    }
+);
+
+app.get('/logout', (req, res) => {
+    req.logout();
+    req.session.token = null;
+    res.redirect('/');
+});
+
 app.use(express.static(path.join(__dirname, "client/build")));
 
 app.use("*", (req, res, next) => {
@@ -69,9 +119,9 @@ app.use(function(err, req, res, next) {
   res.json(err);
 });
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "client/public/index.html"));
-});
+// app.get("/", (req, res) => {
+//   res.sendFile(path.join(__dirname, "client/public/index.html"));
+// });
 
 // Listen to the App Engine-specified port, or 8080 otherwise
 const PORT = process.env.PORT || 8080;

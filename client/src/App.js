@@ -5,13 +5,24 @@ import "./App.css";
 import AuthPage from "./pages/AuthPage";
 import ProjectsPage from "./pages/ProjectsPage";
 
+
+
+
+
+
+
+
 // TODO: Implement this
 function browserHasToken() {
-  /**
-   *  Check browser for auth token and return true if found
-   */
-
+  // if (req.session.token) {
+  //     res.cookie('token', req.session.token);
+  //     return true;
+  // } else {
+  //     res.cookie('token', '')
+  //     return false;
+  // }
   return false;
+
 }
 
 function App() {
@@ -20,6 +31,9 @@ function App() {
       <Switch>
         <Route path="/" exact>
           {browserHasToken() ? null : <Redirect to="login" />}
+        </Route>
+        <Route path="/" exact>
+          {browserHasToken() ? true : <Redirect to="projects" />}
         </Route>
         <Route path="/login" component={AuthPage} />
         <Route path="/projects" component={ProjectsPage} />
