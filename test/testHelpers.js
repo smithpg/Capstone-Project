@@ -2,22 +2,21 @@ const mongoose = require("mongoose");
 const Task = require("../data/task");
 const Project = require("../data/project");
 const Report = require("../data/report");
+const User = require("../data/user");
+const Permission = require("../data/permission");
 const connectionString = "mongodb://localhost:27017/perro";
 
 mongoose
   .connect(connectionString, {
     useNewUrlParser: true, // Use new url parser instead of default deprecated one
-    useCreateIndex: true, //ensure index is deprecated use createindex instead.
+    useCreateIndex: true, //`ensureIndex` is deprecated, use `createIndex` instead.
     keepAlive: true,
     useUnifiedTopology: true
   })
   .catch(console.err);
 
-module.exports.teardownDb = function(done) {
-  mongoose.connection.db
-    .dropDatabase()
-    .then(() => done())
-    .catch(err => done(err));
+module.exports.teardownDb = function() {
+  return mongoose.connection.db.dropDatabase();
 };
 
 module.exports.createDummyTask = async function() {
@@ -52,10 +51,7 @@ module.exports.createDummyTask = async function() {
   return rootTask;
 };
 
-module.exports.createDummyProject = async function(
-  maxTotal = 15,
-  maxChildren = 3
-) {
+async function createDummyProject(maxTotal = 15, maxChildren = 3) {
   const createdProject = await Project.create({ title: "abc" });
 
   // Generate some fake tasks
@@ -89,7 +85,18 @@ module.exports.createDummyProject = async function(
       parent: null
     }).then(res => res.id)
   };
-};
+}
+
+let nextGoogleId = 11111111;
+async function createDummyUser() {
+  const userDocument = await User.create({
+    firstname: "John",
+    lastname: "Doe",
+    googleId: nextGoogleId++
+  });
+
+  return userDocument.id;
+}
 
 function createDummyReport(taskId) {
   return Report.create({
@@ -100,7 +107,25 @@ function createDummyReport(taskId) {
   });
 }
 
+async function seedDB() {
+  // Create test user
+  const testUserId = await createDummyUser();
+
+  // Create a project and assign it to test user
+  const { id: testProjectId } = await createDummyProject();
+
+  await Permission.create({
+    user: testUserId,
+    project: testProjectId,
+    level: "ADMIN"
+  });
+}
+
+module.exports.seedDB = seedDB;
+
 module.exports.createDummyReport = createDummyReport;
+
+module.exports.createDummyProject = createDummyProject;
 
 module.exports.countNodes = tree => {
   let total = 0;
@@ -122,8 +147,3 @@ module.exports.delay = duration =>
   new Promise((resolve, reject) => {
     setTimeout(resolve, duration);
   });
-
-// async function createDummyTask() {
-//   const reports = await
-
-// }

@@ -2,9 +2,10 @@ const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const cors = require("cors");
 const logger = require("morgan");
 
-const { projectRouter } = require("./routes");
+const apiRouter = require("./routes");
 
 const app = express();
 const passport = require("passport");
@@ -27,11 +28,12 @@ if (process.env.NODE_ENV === "development") {
   app.use(logger("dev"));
 }
 
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api/projects", projectRouter);
+app.use("/api", apiRouter);
 
 app.use(cookieParser());
 
