@@ -14,8 +14,8 @@ module.exports = function(passport) {
       {
         clientID: process.env.REACT_APP_CLIENT_ID,
         clientSecret: process.env.REACT_APP_CLIENT_SECRET,
-        callbackURL: "/auth/google/callback",
-        passReqToCallback: true
+        callbackURL: "/auth/google/callback"
+        // passReqToCallback: true
       },
       function(token, refreshToken, profile, done) {
         User.findOrCreate({ googleId: profile.id }, function(err, user) {

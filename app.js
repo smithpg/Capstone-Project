@@ -7,17 +7,21 @@ const logger = require("morgan");
 const { projectRouter } = require("./routes");
 
 const app = express();
-const passport = require('passport');
-const auth = require('./auth');
+const passport = require("passport");
+const auth = require("./auth2");
 
 auth(passport);
 
-app.use(require('express-session')({ secret: 'keyboard cat', resave: true, saveUninitialized: true }));
+app.use(
+  require("express-session")({
+    secret: "keyboard cat",
+    resave: true,
+    saveUninitialized: true
+  })
+);
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-
 
 if (process.env.NODE_ENV === "development") {
   app.use(logger("dev"));
@@ -32,38 +36,40 @@ app.use("/api/projects", projectRouter);
 app.use(cookieParser());
 
 app.get("/login", (req, res) => {
-	res.redirect('/');
-})
-
-app.get("/", (req, res, next) => {
-	if (req.session.token) {
-        res.cookie('token', req.session.token);
-        res.redirect('/projects');
-    } else {
-        res.cookie('token', '')
-        res.redirect('/auth/google');
-    }
+  res.redirect("/");
 });
 
-app.get('/auth/google', passport.authenticate('google', {
-    scope: ['profile']
-}));
+// app.get("/", (req, res, next) => {
+//   if (req.session.token) {
+//     res.cookie("token", req.session.token);
+//     res.redirect("/projects");
+//   } else {
+//     res.cookie("token", "");
+//     res.redirect("/auth/google");
+//   }
+// });
 
-app.get('/auth/google/callback',
-    passport.authenticate('google', {
-        failureRedirect: '/'
-    }),
-    (req, res) => {
-        //console.log(req.user.token);
-        req.session.token = req.user.token;
-        res.redirect('/projects');
-    }
+app.get(
+  "/auth/google",
+  passport.authenticate("google", {
+    scope: ["profile"]
+  })
 );
 
-app.get('/logout', (req, res) => {
-    req.logout();
-    req.session.token = null;
-    res.redirect('/');
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", {
+    failureRedirect: "/"
+  }),
+  (req, res) => {
+    res.send(req.user);
+  }
+);
+
+app.get("/logout", (req, res) => {
+  req.logout();
+  req.session.token = null;
+  res.redirect("/");
 });
 
 app.use(express.static(path.join(__dirname, "client/build")));
@@ -91,11 +97,5 @@ app.use(function(err, req, res, next) {
 // app.get("/", (req, res) => {
 //   res.sendFile(path.join(__dirname, "client/public/index.html"));
 // });
-
-// Listen to the App Engine-specified port, or 8080 otherwise
-const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
-  console.log(`Server listening on port ${PORT}...`);
-});
 
 module.exports = app;
