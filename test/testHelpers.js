@@ -15,8 +15,10 @@ mongoose
   })
   .catch(console.err);
 
-module.exports.teardownDb = function() {
-  return mongoose.connection.db.dropDatabase();
+module.exports.teardownDb = async function() {
+  const allCollections = await mongoose.connection.db.collections();
+
+  allCollections.map(collection => collection.drop());
 };
 
 module.exports.createDummyTask = async function() {
@@ -87,7 +89,7 @@ async function createDummyProject(maxTotal = 15, maxChildren = 3) {
   };
 }
 
-let nextGoogleId = 11111111;
+let nextGoogleId = 333333;
 async function createDummyUser() {
   const userDocument = await User.create({
     firstname: "John",
@@ -95,7 +97,7 @@ async function createDummyUser() {
     googleId: nextGoogleId++
   });
 
-  return userDocument.id;
+  return userDocument;
 }
 
 function createDummyReport(taskId) {
@@ -108,17 +110,36 @@ function createDummyReport(taskId) {
 }
 
 async function seedDB() {
-  // Create test user
-  const testUserId = await createDummyUser();
+  /**
+   *  Creates two each of Projects and Users, then assigns permissions
+   *  such that we have an instance of each type of user -> project
+   *  relationship (i.e. user is unauthorized, user has READ, user has ADMIN)
+   */
 
-  // Create a project and assign it to test user
-  const { id: testProjectId } = await createDummyProject();
+  const testUser1 = await createDummyUser();
+  const testUser2 = await createDummyUser();
+  const testUser3 = await createDummyUser();
+
+  const testProject1 = await createDummyProject();
 
   await Permission.create({
-    user: testUserId,
-    project: testProjectId,
+    user: testUser1.id,
+    project: testProject1.id,
     level: "ADMIN"
   });
+  await Permission.create({
+    user: testUser2.id,
+    project: testProject1.id,
+    level: "READ"
+  });
+
+  // return object containing the various documents
+  return {
+    adminUser: testUser1,
+    readUser: testUser2,
+    userWithNoPermissions: testUser3,
+    project: testProject1
+  };
 }
 
 module.exports.seedDB = seedDB;
@@ -147,3 +168,8 @@ module.exports.delay = duration =>
   new Promise((resolve, reject) => {
     setTimeout(resolve, duration);
   });
+
+module.exports.requireUncached = function(module) {
+  delete require.cache[require.resolve(module)];
+  return require(module);
+};

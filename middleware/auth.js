@@ -3,12 +3,23 @@ const createError = require("http-errors");
 
 const helpers = require("../helpers/authHelpers");
 
+module.exports.userIsLoggedIn = function(req, res, next) {
+  console.log("in orig userIsLoggedIn");
+
+  if (req.user) {
+    next();
+  } else {
+    next(createError(401, "Log in first"));
+  }
+};
+
 module.exports.userHasPermission = function(permissionLevel) {
   return async function(req, res, next) {
+    console.log(req.user);
     if (
       await helpers.checkPermission(
-        req.decoded._id,
-        req.params.project_id,
+        req.user._id,
+        req.params.project_id, // Middleware expects project id as route param
         permissionLevel
       )
     ) {
@@ -17,17 +28,4 @@ module.exports.userHasPermission = function(permissionLevel) {
       return next(createError(403, "Unauthorized"));
     }
   };
-};
-
-module.exports.decodeToken = async function(req, res, next) {
-  try {
-    const token = req.headers.authorization.split(" ")[1];
-    /**
-     *  Attempt to decode the token and attach to request object
-     */
-    req.decoded = await jwt.verify(token);
-    next();
-  } catch (error) {
-    return next(createError(401, "Sign in first."));
-  }
 };

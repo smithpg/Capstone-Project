@@ -3,19 +3,9 @@ const router = express.Router();
 const Joi = require("joi");
 const createError = require("http-errors");
 
-const { Project, Task } = require("../data");
-const {
-  decodeToken,
-  userIsAuthorized,
-  userHasPermission
-} = require("../middleware/auth");
+const { Project, Task, Permission } = require("../data");
+const { userHasPermission, userIsLoggedIn } = require("../middleware/auth");
 const taskRouter = require("./task");
-
-/**
-    decode auth token before passing request to HTTP method handler
-*/
-
-router.use(decodeToken);
 
 /**
  * GET to /project/:project_id to retrieve a full project tree
@@ -23,6 +13,7 @@ router.use(decodeToken);
 
 router.get(
   "/:project_id",
+  userIsLoggedIn,
   userHasPermission("READ"),
   async (req, res, next) => {
     const project = await Project.findById(req.params.project_id);
@@ -38,9 +29,8 @@ router.get(
 /**
  * POST to /project to create a new project
  */
-router.post("/", async (req, res, next) => {
-  const { body, decoded } = req;
-  const { error } = validateProject(body);
+router.post("/", userIsLoggedIn, async (req, res, next) => {
+  const { error } = validateProject(req.body);
   if (error) return next(createError(400, error.details[0].message));
 
   /**
@@ -48,6 +38,16 @@ router.post("/", async (req, res, next) => {
    */
 
   const project = await Project.create({ title: req.body.title });
+
+  /**
+   *    Grant admin permission to creating user
+   */
+
+  await Permission.create({
+    project: project.id,
+    user: req.user.id,
+    level: "ADMIN"
+  });
 
   /**
    *    Return success message
@@ -61,6 +61,7 @@ router.post("/", async (req, res, next) => {
 
 router.delete(
   "/:project_id",
+  userIsLoggedIn,
   userHasPermission("ADMIN"),
   async (req, res, next) => {
     await Project.findById(req.params.project_id).then(res => res.remove());
@@ -75,6 +76,7 @@ router.delete(
 
 router.put(
   "/:project_id",
+  userIsLoggedIn,
   userHasPermission("EDIT"),
   async (req, res, next) => {
     // Ensure that the update is valid

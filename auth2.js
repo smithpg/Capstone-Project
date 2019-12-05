@@ -1,13 +1,20 @@
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
+const User = require("./data/user");
 
 module.exports = function(passport) {
   passport.serializeUser((user, done) => {
+    console.log("serializeUser gets ", user);
+
     done(null, user._id);
   });
-  passport.deserializeUser((user, done) => {
+  passport.deserializeUser((userId, done) => {
     // retrieve user document from db
+    console.log("deserializing");
+    console.log(userId);
 
-    done(null, user);
+    User.findById(userId, user => {
+      done(null, user);
+    });
   });
   passport.use(
     new GoogleStrategy(
@@ -17,8 +24,15 @@ module.exports = function(passport) {
         callbackURL: "/auth/google/callback"
         // passReqToCallback: true
       },
-      function(token, refreshToken, profile, done) {
-        User.findOrCreate({ googleId: profile.id }, function(err, user) {
+      async function(token, refreshToken, profile, done) {
+        const {
+          id,
+          name: { familyName, givenName }
+        } = profile;
+
+        User.findOne({ googleId: profile.id }, function(err, user) {
+          console.log(user);
+
           if (err) {
             console.log("ERROR");
             return done(err);
@@ -26,25 +40,17 @@ module.exports = function(passport) {
           //If no user found create user
           if (!user) {
             user = new User({
-              profile: profile,
-              token: token,
-              name: profile.displayName,
-              email: profile.emails[0].value,
-              username: profile.username,
-              provider: "google",
-              google: profile._json
+              firstname: givenName,
+              lastname: familyName,
+              googleId: id
             });
-            console.log("TEST");
-            console.log(profile.displayName);
-            console.log(profile.emails[0].value);
-            console.log(profile.username);
 
             user.save(function(err) {
               if (err) console.log(err);
               return done(err, user);
             });
           } else {
-            console.log("GOT HERE");
+            console.log("USER EXISTED");
             //user found
             return done(err, user);
           }
