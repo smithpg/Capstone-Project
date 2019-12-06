@@ -4,10 +4,10 @@ const chai = require("chai");
 const chaiHttp = require("chai-http");
 const sinon = require("sinon");
 const _ = require("lodash");
-const app = require("../../app.js");
 
 const testHelpers = require("../testHelpers");
-const jwt = require("jsonwebtoken");
+
+let testContext = {};
 
 chai.should();
 chai.use(chaiHttp);
@@ -15,16 +15,30 @@ chai.use(chaiHttp);
 const validProject = { title: "123" };
 const validProjectUpdate = { title: "abc" };
 
+let currentTestUser;
+
 describe("Routes under /api/projects:", () => {
-  before(initSinon);
+  testHelpers.clearRequireCache();
 
-  after(restoreAllStubs);
+  // Swap out middleware for a stub that forcibly attaches
+  // the user we want to use to the req object
+  const authMiddleware = require("../../middleware/auth");
+  sinon
+    .stub(authMiddleware, "userIsLoggedIn")
+    .callsFake(function(req, res, next) {
+      req.user = currentTestUser;
+      next();
+    });
+  const app = require("../../app.js");
 
-  beforeEach(async function() {
-    await testHelpers.seedDB();
+  before(async function() {
+    await testHelpers.initDB();
+    await testHelpers.deleteCollections(); // ensure db is a blank slate
+    testContext = await testHelpers.seedDB();
   });
-  afterEach(async function() {
-    await testHelpers.teardownDb();
+
+  after(async function() {
+    await testHelpers.deleteCollections();
   });
 
   /**
@@ -33,11 +47,14 @@ describe("Routes under /api/projects:", () => {
 
   describe("POST to /api/projects", () => {
     let response;
+
     before(async function() {
+      useTestUser(testContext.readUser);
+
+      console.log(require("../../middleware/auth").userIsLoggedIn.toString());
       response = await chai
         .request(app)
         .post("/api/projects")
-        .set("Authorization", "Bearer odfijsdfoijsdf") // Auth middleware throws without setting this
         .send(validProject);
     });
 
@@ -52,13 +69,13 @@ describe("Routes under /api/projects:", () => {
 
   describe("GET to /api/projects/:project_id", () => {
     let dummyProject, response;
+
     before(async function() {
-      dummyProject = await testHelpers.createDummyProject();
+      useTestUser(testContext.readUser);
 
       response = await chai
         .request(app)
-        .get(`/api/projects/${dummyProject.id}`)
-        .set("Authorization", `Bearer asdfafefwefwef`);
+        .get(`/api/projects/${testContext.project.id}`);
     });
 
     it("it should have status 200", () => response.should.have.status(200));
@@ -70,13 +87,12 @@ describe("Routes under /api/projects:", () => {
    *  Test project modification
    */
   describe("PUT to /api/projects/:project_id", () => {
-    let dummyProject, response;
+    let response;
     before(async function() {
-      dummyProject = await testHelpers.createDummyProject();
+      useTestUser(testContext.adminUser);
       response = await chai
         .request(app)
-        .put(`/api/projects/${dummyProject.id}`)
-        .set("Authorization", `Bearer asdf;oiajsdf`)
+        .put(`/api/projects/${testContext.project.id}`)
         .send(validProjectUpdate);
     });
 
@@ -87,33 +103,18 @@ describe("Routes under /api/projects:", () => {
    *  Test project deletion
    */
   describe("DELETE to /api/projects/:project_id", () => {
-    let dummyProject, response;
+    let response;
     before(async function() {
-      dummyProject = await testHelpers.createDummyProject();
+      useTestUser(testContext.adminUser);
       response = await chai
         .request(app)
-        .delete(`/api/projects/${dummyProject.id}`)
-        .set("Authorization", `Bearer asdf;oiajsdf`);
+        .delete(`/api/projects/${testContext.project.id}`);
     });
 
     it("it should have status 204", () => response.should.have.status(204));
   });
 });
 
-const stubs = [];
-function initSinon() {
-  stubs.push(
-    sinon
-      .stub(require("../../helpers/authHelpers"), "checkPermission")
-      .returns(true)
-  );
-  stubs.push(
-    sinon.stub(jwt, "verify").returns({
-      _id: 11111111
-    })
-  );
-}
-
-function restoreAllStubs() {
-  stubs.map(stub => stub.restore());
+function useTestUser(user) {
+  currentTestUser = user;
 }

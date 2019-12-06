@@ -24,7 +24,7 @@ describe("POST to /api/projects/:project_id/tasks/:task_id/reports", () => {
     console.log(response.body);
   });
 
-  after(helpers.teardownDb);
+  after(helpers.deleteCollections);
 
   it("it should have status 201", () => {
     response.should.have.status(201);
@@ -53,7 +53,7 @@ describe("PUT to /api/projects/:project_id/tasks/:task_id/reports/report_id", ()
     console.log(response.body);
   });
 
-  after(helpers.teardownDb);
+  after(helpers.deleteCollections);
 
   it("it should have status 204", () => {
     response.should.have.status(204);

@@ -15,7 +15,7 @@ describe("On creation of a task document", () => {
     });
   });
 
-  afterEach(helpers.teardownDb); // drop everything
+  afterEach(helpers.deleteCollections); // drop everything
 
   it("new task's id should be added to parent task document", async function() {
     // Get a new document instance that will reflect most recent
@@ -27,7 +27,7 @@ describe("On creation of a task document", () => {
 });
 
 describe("On deletion of a task document", () => {
-  afterEach(helpers.teardownDb); // drop everything
+  afterEach(helpers.deleteCollections); // drop everything
   it("associated reports should also be deleted", async function() {
     let dummyOriginalParentTask = await Task.create({ title: "abc" });
 
@@ -116,7 +116,7 @@ describe("When a task's parent is updated'", () => {
     await helpers.delay(1000);
   });
 
-  // after(helpers.teardownDb); // drop everything
+  // after(helpers.deleteCollections); // drop everything
 
   it("the old parent should no longer have the task's id in its `children` array", async function() {
     dummyOriginalParentTask = await Task.findById(dummyOriginalParentTask.id); // retrieve up-to-date record

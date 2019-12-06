@@ -12,7 +12,7 @@ describe("On deletion of a project document", () => {
     dummyProject = await testHelpers.createDummyProject(15);
   });
 
-  afterEach(testHelpers.teardownDb); // drop everything
+  afterEach(testHelpers.deleteCollections); // drop everything
 
   it("associated tasks should also be deleted", async function() {
     dummyProject.delete();
@@ -33,7 +33,7 @@ describe("generateProjectTree()", () => {
     dummyProject = await testHelpers.createDummyProject(numNodesInDummyProject);
   });
 
-  after(testHelpers.teardownDb); // drop everything
+  after(testHelpers.deleteCollections); // drop everything
 
   it("should return fully populated tree", async function() {
     const returnedTree = await dummyProject.doc.generateProjectTree();

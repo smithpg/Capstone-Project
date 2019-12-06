@@ -5,7 +5,7 @@ const Report = require("../../data/report");
 const { expect } = require("chai");
 
 describe("On creation of a report document", () => {
-  afterEach(helpers.teardownDb); // drop everything
+  afterEach(helpers.deleteCollections); // drop everything
   it("A reference to the report is added to the appropriate task document", async function() {
     let dummyTask = await Task.create({ title: "abc" });
 

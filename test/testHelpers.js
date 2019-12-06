@@ -6,19 +6,21 @@ const User = require("../data/user");
 const Permission = require("../data/permission");
 const connectionString = "mongodb://localhost:27017/perro";
 
-mongoose
-  .connect(connectionString, {
-    useNewUrlParser: true, // Use new url parser instead of default deprecated one
-    useCreateIndex: true, //`ensureIndex` is deprecated, use `createIndex` instead.
-    keepAlive: true,
-    useUnifiedTopology: true
-  })
-  .catch(console.err);
+module.exports.initDB = function() {
+  return mongoose
+    .connect(connectionString, {
+      useNewUrlParser: true, // Use new url parser instead of default deprecated one
+      useCreateIndex: true, //`ensureIndex` is deprecated, use `createIndex` instead.
+      keepAlive: true,
+      useUnifiedTopology: true
+    })
+    .catch(console.err);
+};
 
-module.exports.teardownDb = async function() {
+module.exports.deleteCollections = async function() {
   const allCollections = await mongoose.connection.db.collections();
 
-  allCollections.map(collection => collection.drop());
+  await Promise.all(allCollections.map(collection => collection.drop()));
 };
 
 module.exports.createDummyTask = async function() {
@@ -169,7 +171,6 @@ module.exports.delay = duration =>
     setTimeout(resolve, duration);
   });
 
-module.exports.requireUncached = function(module) {
-  delete require.cache[require.resolve(module)];
-  return require(module);
+module.exports.clearRequireCache = function() {
+  Object.keys(require.cache).forEach(key => delete require.cache[key]);
 };
