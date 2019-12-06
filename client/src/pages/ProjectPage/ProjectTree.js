@@ -5,35 +5,36 @@ import "antd/dist/antd.css";
 const { TreeNode } = Tree;
 
 function ProjectTree(props) {
-  function renderTree(data) {
-    return data.map(node => {
-      if (node.children && node.children.length) {
-        if (props.editing == node.key) {
+
+  function renderTree(node) {
+    return node.children.map(child => {
+      if (child.children && child.children.length) {
+        if (props.editing == child.key) {
           return (
-            <TreeNode key={node.key} title={renderEditableTreeNode(node)}>
-              {renderTree(node.children)}
+            <TreeNode key={child.key} title={renderEditableTreeNode(child)}>
+              {renderTree(child)}
             </TreeNode>
           );
         } else {
           return (
-            <TreeNode key={node.key} title={renderTreeNodeContent(node)}>
-              {renderTree(node.children)}
+            <TreeNode key={child.key} title={renderTreeNodeContent(child)}>
+              {renderTree(child)}
             </TreeNode>
           );
         }
       } else {
-        if (props.editing == node.key) {
+        if (props.editing == child.key) {
           return (
             <TreeNode
-              key={node.key}
-              title={renderEditableTreeNode(node)}
+              key={child.key}
+              title={renderEditableTreeNode(child)}
             ></TreeNode>
           );
         } else {
           return (
             <TreeNode
-              key={node.key}
-              title={renderTreeNodeContent(node)}
+              key={child.key}
+              title={renderTreeNodeContent(child)}
             ></TreeNode>
           );
         }
@@ -99,14 +100,17 @@ function ProjectTree(props) {
   }
 
   function renderHeader() {
+
+    const node = props.retrieveNode(props.data, props.project);
+
     return (
       <HeaderContainer>
-        <Header>Projects</Header>
+        <Header>{node.content}</Header>
         <HeaderIconContainer>
           <Icon
             type="plus"
             style={{ fontSize: "24px" }}
-            onClick={() => props.handleAddTopLevelProjectClick()}
+            onClick={() => props.handleAddTopLevelProjectItemClick(props.project)}
           ></Icon>
         </HeaderIconContainer>
       </HeaderContainer>
@@ -123,7 +127,7 @@ function ProjectTree(props) {
           onDrop={props.onDrop}
           onSelect={props.onSelect}
         >
-          {renderTree(props.data)}
+          {renderTree(props.retrieveNode(props.data, props.project))}
         </Tree>
       </div>
     </Container>
