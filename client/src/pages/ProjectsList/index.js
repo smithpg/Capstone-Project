@@ -15,7 +15,7 @@ class ProjectsList extends React.Component {
     this.state = {
       data: [],
       editing: null,
-
+      editedTitle: '',
     };
   }
 
@@ -25,11 +25,10 @@ class ProjectsList extends React.Component {
 
   fetchProjects = () => {
     fetch('/api/projects')
-    .then(projects => {
-      console.log('here')
-      console.log(projects.json())
+    .then(projects => projects.json())
+    .then(projectJson => {
       this.setState({
-        data: projects.json()
+        data: projectJson
       })
     })
     .catch(console.log)
@@ -37,36 +36,24 @@ class ProjectsList extends React.Component {
 
   renderTree = data => {
     return data.map(node => {
-      if (node.children && node.children.length) {
-        if (this.state.editing.editing == node.key) {
-          return (
-            <TreeNode key={node.key} title={this.renderEditableTreeNode(node)}>
-              {this.renderTree(node.children)}
-            </TreeNode>
-          );
-        } else {
-          return (
-            <TreeNode key={node.key} title={this.renderTreeNodeContent(node)}>
-              {this.renderTree(node.children)}
-            </TreeNode>
-          );
-        }
+      if (node.project === null) {
+        console.log("null node")
+        console.log(node)
+        return (
+          <div></div>
+        )
+      } else if (this.state.editing === node.project._id) {
+        return (
+          <TreeNode 
+            key={node.project._id} 
+            title={this.renderEditableTreeNode(node)}/>
+        );
       } else {
-        if (this.state.editing == node.key) {
-          return (
-            <TreeNode
-              key={node.key}
-              title={this.renderEditableTreeNode(node)}
-            ></TreeNode>
-          );
-        } else {
-          return (
-            <TreeNode
-              key={node.key}
-              title={this.renderTreeNodeContent(node)}
-            ></TreeNode>
-          );
-        }
+        return (
+          <TreeNode 
+            key={node.project._id} 
+            title={this.renderTreeNodeContent(node)}/>
+        );
       }
     });
   }
@@ -74,7 +61,7 @@ class ProjectsList extends React.Component {
   renderTreeNodeContent = node => {
     return (
       <ItemContainer>
-        <Content>{node.content}</Content>
+        <Content>{node.project.title}</Content>
         {this.renderIcons(node)}
       </ItemContainer>
     );
@@ -86,13 +73,13 @@ class ProjectsList extends React.Component {
         <Group>
           <input
             type="text"
-            defaultValue={node.content}
-            onChange={e => this.handleEditItem(node.key, e.target.value, e)}
+            defaultValue={node.project.title}
+            onChange={e => this.handleEditItem(node.project._id, e.target.value, e)}
           ></input>
           <IconContainer>
             <Icon
               type="check"
-              onClick={e => this.handleDoneEditingClick(e)}
+              onClick={e => this.handleDoneEditingClick(node.project._id, e)}
             ></Icon>
           </IconContainer>
         </Group>
@@ -105,7 +92,7 @@ class ProjectsList extends React.Component {
     return (
       <Group>
         <IconContainer>
-          <Link to={"/projects/" + node.key}>
+          <Link to={"/projects/" + node.project._id}>
             <Icon
               type="down"
             ></Icon>
@@ -115,14 +102,14 @@ class ProjectsList extends React.Component {
         <IconContainer>
           <Icon
             type="edit"
-            onClick={e => this.handleEditItemClick(node.key, e)}
+            onClick={e => this.handleEditItemClick(node.project._id, e)}
           ></Icon>
         </IconContainer>
 
         <IconContainer>
           <Icon
             type="delete"
-            onClick={e => this.handleRemoveItemClick(node.key, e)}
+            onClick={e => this.handleRemoveItemClick(node.project._id, e)}
           ></Icon>
         </IconContainer>
       </Group>
@@ -144,96 +131,8 @@ class ProjectsList extends React.Component {
     );
   }
 
-  // return project with given key
-  retrieveNode = (data, key) => {
-
-    function traverse(root) {
-      if (root === null) {
-        return null;
-      } else if (root.key == key) {
-        return root;
-      } else {
-        return search(root.children);
-      }
-    }
-
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        const node = traverse(array[i]);
-        if (node != null) {
-          return node;
-        }
-      }
-      return null;
-    }
-
-    return search(data);
-  }
-
-  // removing project from project tree
-  handleRemoveItemClick = (key, event) => {
-    var data = Array.from(this.state.data);
-    this.removeNode(data, key);
-
-    var selected;
-    if (this.state.selected == key) {
-      const selected = this.state.selected == key ? null : this.state.selected;
-    }
-    
-    this.setState({
-      data: data,
-      selected: selected == key ? null : selected
-    });
-
-    event.stopPropagation();
-  }
-
-  // begin editing item in project tree
-  handleEditItemClick = (key, event) => {
-    this.setState({
-      editing: key
-    });
-    event.stopPropagation();
-  }
-
-  // handle actual editing of item in project tree
-  handleEditItem = (key, content, event) => {
-    var data = Array.from(this.state.data);
-    
-    const node = this.retrieveNode(data, key);
-    node.content = content;
-    
-    this.setState({
-      data: data
-    });
-
-    event.stopPropagation();
-  }
-
-  // handle done editing button
-  handleDoneEditingClick = (event) => {
-    this.setState({
-      editing: null
-    })
-    event.stopPropagation();
-  }
-
   // add top level project to project tree
   handleAddTopLevelProjectClick = () => {
-    var data = Array.from(this.state.data);
-
-    console.log("click")
-    
-    const newNode = {
-      key: Math.floor(Math.random()*1000), 
-      content: "new content", 
-      children: [], 
-      data: [],
-      readPermissions: [],
-      writePermissions: [],
-    };
-    data.splice(data.length, 0, newNode);
-
     fetch('/api/projects', {
       method: 'POST',
       headers: {
@@ -243,35 +142,74 @@ class ProjectsList extends React.Component {
         title: "new content"
       })
     })
-    
-    this.fetchProjects();
+    .then(() => this.fetchProjects())
+    .catch(console.log)
   }
 
-  // remove project with given key from project tree
-  removeNode = (data, key) => {
+  // removing project from project tree
+  handleRemoveItemClick = (id, event) => {
+    event.stopPropagation();
 
-    function traverse(root) {
-      if (root === null) {
-        return null;
-      } else {
-        search(root.children);
+    fetch('/api/projects/' + id, {
+      method: 'DELETE'
+    })
+    .then(() => this.fetchProjects())
+    .catch(console.log)
+  }
+
+  // return project with given key
+  retrieveNode = (id, data) => {
+    for (var i = 0; i < data.length; i++) {
+      if (id === data[i].project._id) {
+        return data[i];
       }
     }
+    return null;
+  }
 
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        if (array[i].key == key) {
-          array.splice(i, 1);
-          return;
-        }
-        const node = traverse(array[i]);
-        if (node != null) {
-          return;
-        }
-      }  
-    }
+  // begin editing item in project tree
+  handleEditItemClick = (id, event) => {
+    this.setState({
+      editing: id
+    });
 
-    search(data);      
+    event.stopPropagation();
+  }
+
+  // handle actual editing of item in project tree
+  handleEditItem = (id, content, event) => {
+    const data = Array.from(this.state.data)
+    const node = this.retrieveNode(id, data);
+    node.project.title = content
+    
+    this.setState({
+      data: data
+    });
+
+    event.stopPropagation();
+  }
+
+  // handle done editing button
+  handleDoneEditingClick = (id, event) => {
+    const node = this.retrieveNode(id, this.state.data)
+    const newTitle = node.project.title
+
+    fetch('/api/projects/' + this.state.editing, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: newTitle
+      })
+    })
+    .then(() => this.fetchProjects())
+    .catch(console.log)
+
+    this.setState({
+      editing: null
+    })
+    event.stopPropagation();
   }
 
   render() {
