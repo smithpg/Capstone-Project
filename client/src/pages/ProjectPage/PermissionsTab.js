@@ -5,7 +5,7 @@ import { Icon } from 'antd';
 function PermissionsTab(props) {
 
     function renderReadPermissionsData() {
-        const node = props.retrieveRoot(props.data, props.selected);
+        const node = props.retrieveNode(props.data, props.root);
         return (
             <React.Fragment>
                 {node.readPermissions.map(user => (
@@ -24,7 +24,7 @@ function PermissionsTab(props) {
     }
 
     function renderWritePermissionsData() {
-        const node = props.retrieveRoot(props.data, props.selected);
+        const node = props.retrieveNode(props.data, props.root);
         return (
             <React.Fragment>
                 {node.writePermissions.map(user => (
@@ -41,6 +41,11 @@ function PermissionsTab(props) {
             </React.Fragment>
         );
     }
+
+    function submit(event) {
+        props.handlePermissionFormSubmit(props.root, event);
+    }
+
     return (
         <div margin="16px">
             <ComponentHeader>
@@ -48,7 +53,7 @@ function PermissionsTab(props) {
             </ComponentHeader>
             
             <ComponentBody>
-                <form onSubmit={props.handlePermissionFormSubmit}>
+                <form onSubmit={submit}>
                     <label>Username: </label>
                     <input type="text" value={props.formValues.usernamePerm} onChange={props.handleUsernamePermChange}></input>
                     <br></br>

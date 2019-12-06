@@ -7,10 +7,12 @@ import PermissionsTab from './PermissionsTab'
 
 function Tracking(props) {
 
+    const root = props.retrieveNode(props.data, props.project);
+
     function renderTitle() {
-        if (props.selected != null) {
-            const node = props.retrieveNode(props.data, props.selected);
-            return <h1>{node.content}</h1>
+        if (props.selected != null && props.selectedTab != 'permissions') {
+            const selected = props.retrieveNode(props.data, props.selected);
+            return <h1>{selected.content}</h1>
         }
         return <h1></h1>
     }
@@ -34,34 +36,63 @@ function Tracking(props) {
     }
 
     function renderSummaryTab() {
-        return (
-            <SummaryTab
-                data={props.data}
-                selected={props.selected}
-                calculateSummaryData={props.calculateSummaryData}
-                retrieveNode={props.retrieveNode}
-                dateInMillisFromString={props.dateInMillisFromString}
-            ></SummaryTab>
-        );
+        if (props.selected != null) {
+            return (
+                <SummaryTab
+                    data={props.data}
+                    selected={props.selected}
+                    calculateSummaryData={props.calculateSummaryData}
+                    retrieveNode={props.retrieveNode}
+                    dateInMillisFromString={props.dateInMillisFromString}
+                ></SummaryTab>
+            );
+        } else if (root != null) {
+            return (
+                <SummaryTab
+                    data={props.data}
+                    selected={root.key}
+                    calculateSummaryData={props.calculateSummaryData}
+                    retrieveNode={props.retrieveNode}
+                    dateInMillisFromString={props.dateInMillisFromString}
+                ></SummaryTab>
+            );
+        } else {
+            return (<React.Fragment></React.Fragment>);
+        }
+        
     }
 
     function renderTrackingTab() {
-        return (
-            <TrackingTab
-                selected={props.selected}
-                allDataPointsForNode={props.allDataPointsForNode}
-                dateInMillisFromString={props.dateInMillisFromString}
-            >     
-            </TrackingTab>
-        )
+        if (props.selected != null) {
+            return (
+                <TrackingTab
+                    selected={props.selected}
+                    allDataPointsForNode={props.allDataPointsForNode}
+                    dateInMillisFromString={props.dateInMillisFromString}
+                >     
+                </TrackingTab>
+            )
+        } else if (root != null) {
+            return (
+                <TrackingTab
+                    selected={props.selected}
+                    allDataPointsForNode={props.allDataPointsForNode}
+                    dateInMillisFromString={props.dateInMillisFromString}
+                >     
+                </TrackingTab>
+            )
+        } else {
+            return (<React.Fragment></React.Fragment>)
+        }
+        
     }
 
     function renderPermissionsTab() {
         return (
             <PermissionsTab
                 data={props.data}
-                selected={props.selected}
-                retrieveRoot={props.retrieveRoot}
+                root={root.key}
+                retrieveNode={props.retrieveNode}
                 handlePermissionFormSubmit={props.handlePermissionFormSubmit}
                 handleUsernamePermChange={props.handleUsernamePermChange}
                 handleReadPermissionChange={props.handleReadPermissionChange}
@@ -74,17 +105,16 @@ function Tracking(props) {
         );
     }
 
-    function renderTab() {
-        if (props.selected != null) {
-            if (props.selectedTab == 'data') {
-                return renderDataTab();
-            } else if (props.selectedTab == 'summary') {
-                return renderSummaryTab();
-            } else if (props.selectedTab == 'tracking') {
-                return renderTrackingTab();
-            } else if (props.selectedTab == 'permissions') {
-                return renderPermissionsTab();
-            }
+    function renderTab(node) {
+
+        if (props.selected != null && props.selectedTab == 'data') {
+            return renderDataTab();
+        } else if (props.selectedTab == 'summary') {
+            return renderSummaryTab();
+        } else if (props.selectedTab == 'tracking') {
+            return renderTrackingTab();
+        } else if (props.selectedTab == 'permissions') {
+            return renderPermissionsTab();
         }
     }
 
