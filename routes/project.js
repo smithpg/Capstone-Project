@@ -6,6 +6,7 @@ const createError = require("http-errors");
 const { Project, Task, Permission } = require("../data");
 const authMiddleware = require("../middleware/auth");
 const taskRouter = require("./task");
+const permissionRouter = require("./permission");
 
 /**
  * GET to /project to retrieve a list of projects the logged in
@@ -107,6 +108,11 @@ router.put(
  *  Delegate routing of /:project_id/tasks path to taskRouter
  */
 router.use("/:project_id/tasks", taskRouter);
+
+/**
+ *  Delegate routing of /permissions path to permissionsRouter
+ */
+router.use("/:project_id/permissions", permissionRouter);
 
 const projectSchema = Joi.compile({
   title: Joi.string().required()

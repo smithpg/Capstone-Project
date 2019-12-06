@@ -4,10 +4,10 @@ const Joi = require("joi");
 const createError = require("http-errors");
 
 const authMiddleware = require("../middleware/auth");
-const { User, Project } = require("../data");
+const { User } = require("../data");
 
 router.post(
-  "/grant-permission",
+  "/",
   authMiddleware.userIsLoggedIn,
   authMiddleware.userHasPermission("ADMIN"),
   async (req, res, next) => {
@@ -23,6 +23,23 @@ router.post(
         project: projectId,
         level: permissionLevel
       });
+
+      res.status(200).send({
+        message: "success"
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+router.delete(
+  "/:permission_id",
+  authMiddleware.userIsLoggedIn,
+  authMiddleware.userHasPermission("ADMIN"),
+  async (req, res, next) => {
+    try {
+      const targetPermission = Permission.findById(req.params.permission_id);
 
       res.status(200).send({
         message: "success"
