@@ -1,11 +1,8 @@
-const jwt = require("jsonwebtoken");
 const createError = require("http-errors");
 
 const helpers = require("../helpers/authHelpers");
 
 module.exports.userIsLoggedIn = function(req, res, next) {
-  console.log("in orig userIsLoggedIn");
-
   if (req.user) {
     next();
   } else {
@@ -15,7 +12,6 @@ module.exports.userIsLoggedIn = function(req, res, next) {
 
 module.exports.userHasPermission = function(permissionLevel) {
   return async function(req, res, next) {
-    console.log(req.user);
     if (
       await helpers.checkPermission(
         req.user._id,
