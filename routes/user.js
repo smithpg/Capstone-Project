@@ -15,10 +15,14 @@ router.post(
       const { userEmail, projectId, permissionLevel } = req.body;
 
       // Look for user with matching email
-      User.find();
+      const user = await User.find({ email: userEmail });
 
       // Create the specified permission
-      Permission.create(req.body);
+      Permission.create({
+        user: user.id,
+        project: projectId,
+        level: permissionLevel
+      });
 
       res.status(200).send({
         message: "success"
