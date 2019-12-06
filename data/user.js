@@ -15,6 +15,11 @@ const userSchema = Schema(
       type: Number,
       unique: true,
       required: true
+    },
+    email: {
+      type: String,
+      unique: true,
+      required: true
     }
   },
   { timestamps: true }
@@ -23,7 +28,7 @@ const userSchema = Schema(
 userSchema.methods.getAccessibleProjects = function() {
   return mongoose
     .model("Permission")
-    .find({ user: userDocument.id })
+    .find({ user: this.id })
     .populate("project")
     .then(permissionDocuments => {
       return permissionDocuments.map(doc => {
