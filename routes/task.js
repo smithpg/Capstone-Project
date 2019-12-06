@@ -48,6 +48,8 @@ router.put(
 
       Object.assign(task, req.body);
 
+      await task.save();
+
       res.status(204).send();
     } catch (error) {
       return next(createError(500, error));

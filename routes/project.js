@@ -97,6 +97,8 @@ router.put(
 
     Object.assign(project, req.body);
 
+    await project.save();
+
     res.status(204).send("project updated");
   }
 );
