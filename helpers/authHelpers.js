@@ -1,13 +1,17 @@
-const Project = require("../data/project");
+const Permission = require("../data/permission");
 const { permissions } = require("../constants");
 
 async function checkPermission(userId, projectId, requiredPermission) {
-  const project = await Project.findById(projectId).populate();
+  const permissions = await Permission.find({
+    project: projectId,
+    user: userId
+  });
 
-  return project.permissions.some(
-    permission =>
-      permission.user === userId &&
+  return (
+    permissions &&
+    permissions.some(permission =>
       permissionIsSufficient(requiredPermission, permission.level)
+    )
   );
 }
 
