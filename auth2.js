@@ -12,7 +12,10 @@ module.exports = function(passport) {
     console.log("deserializing");
     console.log(userId);
 
-    User.findById(userId, user => {
+    User.findById(userId, (err, user) => {
+      if (err) {
+        console.error(err)
+      }
       done(null, user);
     });
   });
