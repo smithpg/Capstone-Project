@@ -21,10 +21,14 @@ const userSchema = Schema(
 );
 
 userSchema.methods.getAccessibleProjects = function() {
-  return Permission.find({ user: userDocument.id })
+  return mongoose
+    .model("Permission")
+    .find({ user: userDocument.id })
     .populate("project")
     .then(permissionDocuments => {
-      return permissionDocuments.map(doc => doc.project);
+      return permissionDocuments.map(doc => {
+        return { permission: doc.level, project: doc.project };
+      });
     });
 };
 
