@@ -4,8 +4,17 @@ const Joi = require("joi");
 const createError = require("http-errors");
 
 const { Project, Task, Permission } = require("../data");
-const { userHasPermission, userIsLoggedIn } = require("../middleware/auth");
+const authMiddleware = require("../middleware/auth");
 const taskRouter = require("./task");
+
+/**
+ * GET to /project to retrieve a list of projects the logged in
+ * user can access
+ */
+
+router.get("/", authMiddleware.userIsLoggedIn, async (req, res, next) => {
+  res.json(await req.user.getAccessibleProjects());
+});
 
 /**
  * GET to /project/:project_id to retrieve a full project tree
@@ -13,8 +22,8 @@ const taskRouter = require("./task");
 
 router.get(
   "/:project_id",
-  userIsLoggedIn,
-  userHasPermission("READ"),
+  authMiddleware.userIsLoggedIn,
+  authMiddleware.userHasPermission("READ"),
   async (req, res, next) => {
     const project = await Project.findById(req.params.project_id);
 
@@ -29,7 +38,7 @@ router.get(
 /**
  * POST to /project to create a new project
  */
-router.post("/", userIsLoggedIn, async (req, res, next) => {
+router.post("/", authMiddleware.userIsLoggedIn, async (req, res, next) => {
   const { error } = validateProject(req.body);
   if (error) return next(createError(400, error.details[0].message));
 
@@ -61,8 +70,8 @@ router.post("/", userIsLoggedIn, async (req, res, next) => {
 
 router.delete(
   "/:project_id",
-  userIsLoggedIn,
-  userHasPermission("ADMIN"),
+  authMiddleware.userIsLoggedIn,
+  authMiddleware.userHasPermission("ADMIN"),
   async (req, res, next) => {
     await Project.findById(req.params.project_id).then(res => res.remove());
 
@@ -76,8 +85,8 @@ router.delete(
 
 router.put(
   "/:project_id",
-  userIsLoggedIn,
-  userHasPermission("EDIT"),
+  authMiddleware.userIsLoggedIn,
+  authMiddleware.userHasPermission("EDIT"),
   async (req, res, next) => {
     // Ensure that the update is valid
     const { error } = validateProject(req.body);

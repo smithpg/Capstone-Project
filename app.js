@@ -35,21 +35,9 @@ app.use(cookieParser());
 
 app.use("/api", apiRouter);
 
-app.use(cookieParser());
-
 app.get("/login", (req, res) => {
   res.redirect("/");
 });
-
-// app.get("/", (req, res, next) => {
-//   if (req.session.token) {
-//     res.cookie("token", req.session.token);
-//     res.redirect("/projects");
-//   } else {
-//     res.cookie("token", "");
-//     res.redirect("/auth/google");
-//   }
-// });
 
 app.get(
   "/auth/google",
