@@ -6,13 +6,6 @@ import AuthPage from "./pages/AuthPage";
 import ProjectsList from "./pages/ProjectsList";
 import ProjectPage from './pages/ProjectPage';
 
-
-
-
-
-
-
-
 // TODO: Implement this
 function browserHasToken() {
   // if (req.session.token) {
@@ -56,18 +49,7 @@ class App extends React.Component {
             {browserHasToken() ? null : <Redirect to="login" />}
           </Route>
           <Route path="/login" component={AuthPage} />
-          <Route exact path="/projects">
-            <ProjectsList
-              data={this.state.data}
-              editing={this.state.editing}
-              handleEditItem={this.handleEditItem}
-              handleDoneEditingClick={this.handleDoneEditingClick}
-              handleEditItemClick={this.handleEditItemClick}
-              handleRemoveItemClick={this.handleRemoveItemClick}
-              handleAddTopLevelProjectClick={this.handleAddTopLevelProjectClick}
-            >
-            </ProjectsList>
-          </Route>
+          <Route exact path="/projects" component={ProjectsList}></Route>
           <Route path="/projects/:projectId" render={(routeProps) => (
             <ProjectPage
               {...routeProps}
@@ -120,125 +102,7 @@ class App extends React.Component {
   // ProjectList operations
   /////////////////////////////////////////////////////////////////////////
 
-  // return project with given key
-  retrieveNode = (data, key) => {
-
-    function traverse(root) {
-      if (root === null) {
-        return null;
-      } else if (root.key == key) {
-        return root;
-      } else {
-        return search(root.children);
-      }
-    }
-
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        const node = traverse(array[i]);
-        if (node != null) {
-          return node;
-        }
-      }
-      return null;
-    }
-
-    return search(data);
-  }
-
-  // removing project from project tree
-  handleRemoveItemClick = (key, event) => {
-    var data = Array.from(this.state.data);
-    this.removeNode(data, key);
-
-    var selected;
-    if (this.state.selected == key) {
-      const selected = this.state.selected == key ? null : this.state.selected;
-    }
-    
-    this.setState({
-      data: data,
-      selected: selected == key ? null : selected
-    });
-
-    event.stopPropagation();
-  }
-
-  // begin editing item in project tree
-  handleEditItemClick = (key, event) => {
-    this.setState({
-      editing: key
-    });
-    event.stopPropagation();
-  }
-
-  // handle actual editing of item in project tree
-  handleEditItem = (key, content, event) => {
-    var data = Array.from(this.state.data);
-    
-    const node = this.retrieveNode(data, key);
-    node.content = content;
-    
-    this.setState({
-      data: data
-    });
-
-    event.stopPropagation();
-  }
-
-  // handle done editing button
-  handleDoneEditingClick = (event) => {
-    this.setState({
-      editing: null
-    })
-    event.stopPropagation();
-  }
-
-  // add top level project to project tree
-  handleAddTopLevelProjectClick = () => {
-    var data = Array.from(this.state.data);
-    
-    const newNode = {
-      key: Math.floor(Math.random()*1000), 
-      content: "new content", 
-      children: [], 
-      data: [],
-      readPermissions: [],
-      writePermissions: [],
-    };
-    data.splice(data.length, 0, newNode);
-    
-    this.setState({
-      data: data
-    });
-  }
-
-  // remove project with given key from project tree
-  removeNode = (data, key) => {
-
-    function traverse(root) {
-      if (root === null) {
-        return null;
-      } else {
-        search(root.children);
-      }
-    }
-
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        if (array[i].key == key) {
-          array.splice(i, 1);
-          return;
-        }
-        const node = traverse(array[i]);
-        if (node != null) {
-          return;
-        }
-      }  
-    }
-
-    search(data);      
-  }
+  
 
   // ProjectPage operations
   /////////////////////////////////////////////////////

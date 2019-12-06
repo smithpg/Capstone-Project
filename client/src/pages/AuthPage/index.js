@@ -29,13 +29,40 @@ function AuthPage(props) {
     <PageContainer>
       <SignInContainer className="pageContainer">
         <h1>Welcome to Perro Project</h1>
-        <a href="/auth/google">
-          <button>Authenticate</button>
+        <a
+          href={'http://localhost:80/auth/google'}
+        >
+          <button
+          >Authenticate</button>
         </a>
       </SignInContainer>
     </PageContainer>
     
   );
+
+  function authorize() {
+    console.log("in authorize")
+    fetch('/auth/google', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        Accept: "application/json",
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Credentials' : true
+      },
+    })
+    .then(res => {
+      console.log(res.json())
+      return res.json()
+    })
+    .then(resJson => {
+      
+    })
+    .catch(err => {
+      console.log("error in authorize")
+      console.log(err);
+    });
+  }
 }
 
 function onSignIn(googleUser) {
