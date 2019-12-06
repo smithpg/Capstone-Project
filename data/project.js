@@ -26,6 +26,7 @@ projectSchema.post("remove", async function(next) {
     Delete any tasks associated with this project
     */
   await mongoose.model("Task").deleteMany({ project: this.id });
+  await mongoose.model("Permission").deleteMany({ project: this.id });
 });
 
 module.exports = mongoose.model("Project", projectSchema);
