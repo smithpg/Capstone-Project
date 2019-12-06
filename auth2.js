@@ -30,11 +30,10 @@ module.exports = function(passport) {
           name: { familyName, givenName }
         } = profile;
 
-        User.findOne({ googleId: profile.id }, function(err, user) {
-          console.log(user);
+        console.log(profile.emails[0].value);
 
+        User.findOne({ googleId: profile.id }, async function(err, user) {
           if (err) {
-            console.log("ERROR");
             return done(err);
           }
           //If no user found create user
@@ -42,16 +41,16 @@ module.exports = function(passport) {
             user = new User({
               firstname: givenName,
               lastname: familyName,
-              googleId: id
+              googleId: id,
+              email: profile.emails[0].value
             });
 
             user.save(function(err) {
-              if (err) console.log(err);
               return done(err, user);
             });
           } else {
-            console.log("USER EXISTED");
             //user found
+            console.log("USER EXISTED");
             return done(err, user);
           }
         });
