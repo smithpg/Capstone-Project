@@ -9,7 +9,7 @@ const apiRouter = require("./routes");
 
 const app = express();
 const passport = require("passport");
-const auth = require("./auth2");
+const auth = require("./auth");
 
 auth(passport);
 
@@ -42,7 +42,7 @@ app.get("/login", (req, res) => {
 app.get(
   "/auth/google",
   passport.authenticate("google", {
-    scope: ["profile"]
+    scope: ["profile email"]
   })
 );
 
@@ -52,6 +52,8 @@ app.get(
     failureRedirect: "/"
   }),
   (req, res) => {
+  	//console.log(req.body);
+  	//console.log(req.user);
     res.send(req.user);
   }
 );
