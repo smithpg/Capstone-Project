@@ -141,68 +141,98 @@ class ProjectsList extends React.Component {
       <Container>
         <HeaderContainer>
           <Header>Projects</Header>
-          <HeaderIconContainer>
+        </HeaderContainer>
+
+        <ListContainer>
+          {this.state.availableProjects.map(obj => {
+            const { project } = obj;
+
+            console.log(this.state.availableProjects);
+
+            console.log(obj.project);
+            return (
+              <ListItemContainer>
+                <li>
+                  <ListContentContainer>
+                    <Strong>{project.title}</Strong>
+                    <IconContainer>
+                      <Link to={`/projects/${project._id}`}>View</Link>
+                      <Button
+                        onClick={e =>
+                          this.handleRemoveItemClick(project._id, e)
+                        }
+                      >
+                        X
+                      </Button>
+                    </IconContainer>
+                  </ListContentContainer>
+                </li>
+              </ListItemContainer>
+            );
+          })}
+
+          <ListItemContainer>
             <Icon
               type="plus"
               style={{ fontSize: "24px" }}
               onClick={() => this.createNewProject()}
             ></Icon>
-          </HeaderIconContainer>
-        </HeaderContainer>
-
-        {this.state.availableProjects.map(obj => {
-          const { project } = obj;
-
-          console.log(this.state.availableProjects);
-
-          console.log(obj.project);
-          return (
-            <li>
-              <strong>{project.title}</strong>
-              {this.renderIcons(obj)}
-            </li>
-          );
-        })}
+          </ListItemContainer>
+        </ListContainer>
       </Container>
     );
   }
 }
 
 const Container = styled.ul`
-  float: left;
-  width: 33%;
-  overflow-y: scroll;
-  height: 100vh;
+  display: inline-block;
+  text-align: center;
+  width: 100%;
+  list-style-type: none;
 `;
 
 const HeaderContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
-`;
-
-const HeaderIconContainer = styled.div`
-  margin: 8px;
-  margin-top: 16px;
+  text-align: center
+  margin: auto;
+  width: 33%
 `;
 
 const Header = styled.h1`
   margin: 8px;
-  margin-left: 24px;
 `;
 
-const ItemContainer = styled.div`
-  display: flex;
-  justify-content: space-between;
+const Strong = styled.strong``;
+
+const ListContainer = styled.div`
+  border-radius: 8px
+  background-color: Gray;
+  margin: 8px
+  width: 50%
+  display: inline-block
+`;
+
+const ListItemContainer = styled.div`
+  border-radius: 8px
+  background-color: White
+  margin: 8px
+  width: 50%
+  display: inline-block
+`;
+
+const ListContentContainer = styled.div`
+  display: flex
+  justify-content: space-between
+  padding: 4px
 `;
 
 const IconContainer = styled.div`
-  margin-left: 8px;
-`;
-
-const Group = styled.div`
   display: flex;
 `;
 
-const Content = styled.div``;
+const Group = styled.div``;
+
+const Button = styled.button`
+  margin-left: 4px;
+`;
 
 export default ProjectsList;
