@@ -65,8 +65,7 @@ function TrackingTab(props) {
 
     function allDataPointsForNode() {
     
-        function collect(root, datapoints) {
-          var data = [];
+        function collect(root, data) {
           for (var i = 0; i < root.reports.length; i++) {
               data.splice(data.length, 0, {
                   date: root.reports[i].date,
