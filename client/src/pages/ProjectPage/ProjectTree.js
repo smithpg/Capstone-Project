@@ -4,134 +4,428 @@ import styled from "styled-components";
 import "antd/dist/antd.css";
 const { TreeNode } = Tree;
 
-function ProjectTree(props) {
+class ProjectTree extends React.Component {
 
-  function renderTree(node) {
-    return node.children.map(child => {
-      if (child.children && child.children.length) {
-        if (props.editing == child.key) {
-          return (
-            <TreeNode key={child.key} title={renderEditableTreeNode(child)}>
-              {renderTree(child)}
-            </TreeNode>
-          );
-        } else {
-          return (
-            <TreeNode key={child.key} title={renderTreeNodeContent(child)}>
-              {renderTree(child)}
-            </TreeNode>
-          );
-        }
-      } else {
-        if (props.editing == child.key) {
-          return (
-            <TreeNode
-              key={child.key}
-              title={renderEditableTreeNode(child)}
-            ></TreeNode>
-          );
-        } else {
-          return (
-            <TreeNode
-              key={child.key}
-              title={renderTreeNodeContent(child)}
-            ></TreeNode>
-          );
-        }
-      }
-    });
+  constructor(props) {
+    super(props)
+    this.state={
+      editing: null,
+      project: null,
+      task: null
+    }
   }
 
-  function renderTreeNodeContent(node) {
+  componentDidMount() {
+    this.fetchProject();
+  }
+
+  fetchProject = () => {
+    fetch('/api/projects/' + this.props.id)
+    .then(res => res.json())
+    .then(proj => {
+      this.setState({
+        project: proj
+      })
+    })
+    .catch(console.log)
+  }
+
+  render() {
+    return (
+      <Container>
+        <div>
+          {this.renderHeader()}
+          <Tree
+            blockNode
+            draggable={true}
+            //onDrop={this.onDrop}
+            onSelect={this.props.onSelect}
+          >
+            {this.renderTree(this.state.project)}
+          </Tree>
+        </div>
+      </Container>
+    );
+  }
+
+  renderTree = node => {
+    if (node != null) {
+      if (node.tree) {
+        return node.tree.map(child => {
+          if (child.children && child.children.length) {
+            if (this.state.editing === child.id) {
+              return (
+                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                  {this.renderTree(child)}
+                </TreeNode>
+              );
+            } else {
+              return (
+                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                  {this.renderTree(child)}
+                </TreeNode>
+              );
+            }
+          } else {
+            if (this.state.editing === child._id) {
+              return (
+                <TreeNode
+                  key={child._id}
+                  title={this.renderEditableTreeNode(child)}
+                ></TreeNode>
+              );
+            } else {
+              return (
+                <TreeNode
+                  key={child._id}
+                  title={this.renderTreeNodeContent(child)}
+                ></TreeNode>
+              );
+            }
+          }
+        });
+      } else {
+        return node.children.map(child => {
+          console.log(child)
+          if (child.children && child.children.length) {
+            if (this.state.editing === child.id) {
+              return (
+                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                  {this.renderTree(child)}
+                </TreeNode>
+              );
+            } else {
+              return (
+                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                  {this.renderTree(child)}
+                </TreeNode>
+              );
+            }
+          } else {
+            if (this.state.editing === child._id) {
+              return (
+                <TreeNode
+                  key={child._id}
+                  title={this.renderEditableTreeNode(child)}
+                ></TreeNode>
+              );
+            } else {
+              return (
+                <TreeNode
+                  key={child._id}
+                  title={this.renderTreeNodeContent(child)}
+                ></TreeNode>
+              );
+            }
+          }
+        });
+      }
+      
+    }
+  }
+
+  renderTreeNodeContent = node => {
     return (
       <ItemContainer>
-        <Content>{node.content}</Content>
-        {renderIcons(node)}
+        <Content>{node.title}</Content>
+        {this.renderIcons(node)}
       </ItemContainer>
     );
   }
 
-  function renderEditableTreeNode(node) {
+  renderEditableTreeNode = node => {
     return (
       <ItemContainer>
         <Group>
           <input
             type="text"
-            defaultValue={node.content}
-            onChange={e => props.handleEditItem(node.key, e.target.value, e)}
+            defaultValue={node.title}
+            onChange={e => this.handleEditItem(node._id, e.target.value, e)}
           ></input>
           <IconContainer>
             <Icon
               type="check"
-              onClick={e => props.handleDoneEditingClick(e)}
+              onClick={e => this.handleDoneEditingClick(node._id, e)}
             ></Icon>
           </IconContainer>
         </Group>
-        {renderIcons(node)}
+        {this.renderIcons(node)}
       </ItemContainer>
     );
   }
 
-  function renderIcons(node) {
+  renderIcons = node => {
     return (
       <Group>
         <IconContainer>
           <Icon
             type="plus"
-            onClick={e => props.handleAddChildClick(node.key, e)}
+            onClick={e => this.handleAddChildClick(node._id, e)}
           ></Icon>
         </IconContainer>
 
         <IconContainer>
           <Icon
             type="edit"
-            onClick={e => props.handleEditItemClick(node.key, e)}
+            onClick={e => this.handleEditItemClick(node._id, e)}
           ></Icon>
         </IconContainer>
 
         <IconContainer>
           <Icon
             type="delete"
-            onClick={e => props.handleRemoveItemClick(node.key, e)}
+            onClick={e => this.handleRemoveItemClick(node._id, e)}
           ></Icon>
         </IconContainer>
       </Group>
     );
   }
 
-  function renderHeader() {
-
-    const node = props.retrieveNode(props.data, props.project);
-
-    return (
-      <HeaderContainer>
-        <Header>{node.content}</Header>
-        <HeaderIconContainer>
-          <Icon
-            type="plus"
-            style={{ fontSize: "24px" }}
-            onClick={() => props.handleAddTopLevelProjectItemClick(props.project)}
-          ></Icon>
-        </HeaderIconContainer>
-      </HeaderContainer>
-    );
+  renderHeader = ()  => {
+    if (this.state.project != null) {
+      return (
+        <HeaderContainer>
+          <Header>{this.state.project.title}</Header>
+          <HeaderIconContainer>
+            <Icon
+              type="plus"
+              style={{ fontSize: "24px" }}
+              onClick={() => this.handleAddTopLevelProjectItemClick()}
+            ></Icon>
+          </HeaderIconContainer>
+        </HeaderContainer>
+      );
+    }
   }
 
-  return (
-    <Container>
-      <div>
-        {renderHeader()}
-        <Tree
-          blockNode
-          draggable={true}
-          onDrop={props.onDrop}
-          onSelect={props.onSelect}
-        >
-          {renderTree(props.retrieveNode(props.data, props.project))}
-        </Tree>
-      </div>
-    </Container>
-  );
+  // add top level task to project tree
+  handleAddTopLevelProjectItemClick = () => {
+    fetch('/api/projects/' + this.props.id +'/tasks/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: "new content",
+
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.fetchProject())
+  }
+
+  // adding child to a project tree item
+  handleAddChildClick = (parentId, event) => {
+    fetch('/api/projects/' + this.props.id +'/tasks/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: "new content",
+        parent: parentId
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.fetchProject())
+
+    event.stopPropagation();
+  }
+
+  // removing project from project tree
+  handleRemoveItemClick = (id, event) => {
+    fetch('/api/projects/' + this.props.id + '/tasks/' + id, {
+      method: "DELETE"
+    })
+    .then(() => this.fetchProject())
+    .catch(console.log)
+
+    event.stopPropagation();
+  }
+
+  // return task with given key
+  retrieveNode = (id) => {
+
+    function traverse(root) {
+      console.log(root)
+      if (root === null) {
+        return null;
+      } else if (root._id === id) {
+        return root;
+      } else {
+        return search(root.children);
+      }
+    }
+
+    function search(array) {
+      for (var i = 0; i < array.length; i++) {
+        const node = traverse(array[i]);
+        if (node != null) {
+          return node;
+        }
+      }
+      return null;
+    }
+
+    return search(this.state.project);
+  }
+
+  // begin editing item in project tree
+  handleEditItemClick = (id, event) => {
+    const node = this.retrieveNode(id);
+
+    this.setState({
+      editing: id,
+      task: node
+    });
+    event.stopPropagation();
+  }
+
+  // handle actual editing of item in project tree
+  handleEditItem = (id, content, event) => {
+    this.setState((state, props) => {
+      var updated = Object.assign({}, state.task)
+      updated.title = content
+      return {task: updated}
+    })
+
+    event.stopPropagation();
+  }
+
+  // handle done editing button
+  handleDoneEditingClick = (id, event) => {
+    fetch('/api/projects/' + this.props.id +'/tasks/' + id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: this.state.task.title,
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.fetchProject())
+
+    this.setState({
+      editing: null,
+      task: null
+    })
+
+    event.stopPropagation();
+  }
+
+  /*
+  // on dropping a project in the tree into a new position
+  onDrop = (event) => {
+    console.log("on drop")
+
+    const dragKey = event.dragNode.props.eventKey;
+    const dropKey = event.node.props.eventKey;
+    const dropPosition = event.dropPosition;
+
+    const dragNode = this.retrieveNode(dragKey);
+    console.log(dragNode)
+    const dropIndex = this.indexOf(this.state.project.tree, dropKey);
+    console.log(dropIndex)
+
+    this.insertNode(dragNode, dropKey, dropPosition, dropIndex, this.updateParent);
+  }
+  */
+
+  // return index of a project given its key within its parent's array
+  indexOf = (data, key) => {
+
+    for (var i = 0; i < data.length; i++) {
+      if (data[i].key == key) {
+        return i;
+      }
+      const index = this.indexOf(data[i].children, key);
+      if (index != -1) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  updateParent = (node, parent) => {
+    console.log('update parent')
+    console.log(node)
+    console.log(parent)
+    fetch('/api/projects/' + this.props.id +'/tasks/' + node._id, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: this.state.task.title,
+        parent: parent._id
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.fetchProject())
+    .catch(console.log)
+  }
+
+  // insert node into project tree
+  insertNode = (dragNode, dropKey, dropPosition, dropIndex, updateParent) => {
+
+    function traverse(root) {
+      if (root === null) {
+        return;
+      } else {
+        search(root.children, root);
+      }
+    }
+
+    function search(array, parent) {
+      for (var i = 0; i < array.length; i++) {
+        if (array[i]._id === dropKey) {
+          if (dropPosition === dropIndex - 1) {
+            updateParent(dragNode, parent)
+            //array.splice(i, 0, dragNode);
+          } else if (dropPosition === dropIndex + 1) {
+            //array.splice(i + 1, 0, dragNode);
+            updateParent(dragNode, parent)
+          } else {
+            //array[i].children.splice(array[i].children.length, 0, dragNode);
+            updateParent(dragNode, array[i])
+          }
+            return;
+        }
+        traverse(array[i]);
+      }    
+    }
+
+    search(this.state.project.tree, null)
+  }
+
+  // remove project with given key from project tree
+  removeNode = (data, key) => {
+
+    function traverse(root) {
+      if (root === null) {
+        return null;
+      } else {
+        search(root.children);
+      }
+    }
+
+    function search(array) {
+      for (var i = 0; i < array.length; i++) {
+        if (array[i].key == key) {
+          array.splice(i, 1);
+          return;
+        }
+        const node = traverse(array[i]);
+        if (node != null) {
+          return;
+        }
+      }  
+    }
+
+    search(data);      
+  }
+
 }
 
 const Container = styled.div`

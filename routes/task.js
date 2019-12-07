@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({mergeParams: true});
 const Joi = require("joi");
 const createError = require("http-errors");
 
@@ -15,8 +15,12 @@ router.post(
   authMiddleware.userIsLoggedIn,
   authMiddleware.userHasPermission("EDIT"),
   async (req, res, next) => {
+    /*
     const { error } = validatetask(req.body);
     if (error) return next(createError(400, error.details[0].message));
+    */
+
+    console.log(req.params)
 
     /**
      *    Attempt to create the task
@@ -62,8 +66,7 @@ router.delete(
   authMiddleware.userIsLoggedIn,
   authMiddleware.userHasPermission("ADMIN"),
   async (req, res, next) => {
-    const task = Task.findById(req.params.task_id);
-
+    const task = await Task.findById(req.params.task_id);
     task.remove();
 
     res.status(204).send("Task deleted");
