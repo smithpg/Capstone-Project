@@ -18,7 +18,7 @@ projectSchema.methods.generateProjectTree = async function() {
     .populate("reports")
     .lean();
 
-  return assembleTree(tasks);
+  return tasks.length > 0 ? assembleTree(tasks) : null;
 };
 
 projectSchema.post("remove", async function(next) {
