@@ -31,7 +31,7 @@ router.get(
     res.json({
       title: project.title,
       id: project.id,
-      tree: (await project.generateProjectTree()) || null
+      tree: await project.generateProjectTree()
     });
   }
 );
@@ -62,7 +62,7 @@ router.post("/", authMiddleware.userIsLoggedIn, async (req, res, next) => {
   /**
    *    Return success message
    */
-  res.status(201).send(project);
+  res.status(201).send({ permission: "ADMIN", project });
 });
 
 /**
