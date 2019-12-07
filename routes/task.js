@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router({mergeParams: true});
+const router = express.Router({ mergeParams: true });
 const Joi = require("joi");
 const createError = require("http-errors");
 
@@ -20,7 +20,7 @@ router.post(
     if (error) return next(createError(400, error.details[0].message));
     */
 
-    console.log(req.params)
+    console.log(req.params);
 
     /**
      *    Attempt to create the task
@@ -43,6 +43,8 @@ router.put(
   authMiddleware.userIsLoggedIn,
   authMiddleware.userHasPermission("EDIT"),
   async (req, res, next) => {
+    console.log(req.body);
+
     const { error } = validatetask(req.body);
     if (error) return next(createError(400, error.details[0].message));
 

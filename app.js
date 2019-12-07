@@ -33,7 +33,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-app.use("/api", apiRouter);
+app.use((req, res, next) => {
+  console.log("++++++++++");
+  console.log(req.body);
+  console.log("++++++++++");
+
+  next();
+});
 
 app.get("/login", (req, res) => {
   res.redirect("/");
@@ -43,18 +49,18 @@ app.get(
   "/auth/google",
   passport.authenticate("google", {
     scope: ["profile email"]
-  }),
+  })
 );
 
 app.get(
   "/auth/google/callback",
   passport.authenticate("google", {
     failureRedirect: "http://localhost:3000/",
-    successRedirect: 'http://localhost:3000/projects'
+    successRedirect: "http://localhost:3000/projects"
   }),
   (req, res) => {
-  	//console.log(req.body);
-  	//console.log(req.user);
+    //console.log(req.body);
+    //console.log(req.user);
     res.send(req.user);
   }
 );
@@ -64,6 +70,8 @@ app.get("/logout", (req, res) => {
   req.session.token = null;
   res.redirect("/");
 });
+
+app.use("/api", apiRouter);
 
 app.use(express.static(path.join(__dirname, "client/build")));
 

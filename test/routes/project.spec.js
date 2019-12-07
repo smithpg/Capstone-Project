@@ -15,9 +15,8 @@ chai.use(chaiHttp);
 const validProject = { title: "123" };
 const validProjectUpdate = { title: "abc" };
 
-let currentTestUser;
-
 describe("Routes under /api/projects:", () => {
+  // Clear the cache to ensure we get a fresh instance of `app`
   testHelpers.clearRequireCache();
 
   // Swap out middleware for a stub that forcibly attaches
@@ -32,7 +31,6 @@ describe("Routes under /api/projects:", () => {
   const app = require("../../app.js");
 
   before(async function() {
-    await testHelpers.initDB();
     await testHelpers.deleteCollections(); // ensure db is a blank slate
     testContext = await testHelpers.seedDB();
   });
@@ -64,7 +62,27 @@ describe("Routes under /api/projects:", () => {
   });
 
   /**
-   *  Test project retrieval
+   *  Test retrieval of a user's accessible projects
+   */
+
+  describe("GET to /api/projects/:project_id", () => {
+    let response;
+
+    before(async function() {
+      useTestUser(testContext.adminUser);
+
+      response = await chai.request(app).get(`/api/projects`);
+    });
+
+    it("it should have status 200", () => response.should.have.status(200));
+    it("it should be TYPE = JSON", () => response.should.be.json);
+    it("should contain all two projects that this user can access", () => {
+      chai.expect(response.body.length).to.equal(2);
+    });
+  });
+
+  /**
+   *  Test individual project retrieval
    */
 
   describe("GET to /api/projects/:project_id", () => {
@@ -115,6 +133,7 @@ describe("Routes under /api/projects:", () => {
   });
 });
 
+let currentTestUser;
 function useTestUser(user) {
   currentTestUser = user;
 }

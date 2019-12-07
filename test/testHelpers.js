@@ -4,17 +4,33 @@ const Project = require("../data/project");
 const Report = require("../data/report");
 const User = require("../data/user");
 const Permission = require("../data/permission");
-const connectionString = "mongodb://localhost:27017/perro";
+const { MongoMemoryServer } = require("mongodb-memory-server");
 
 module.exports.initDB = function() {
-  return mongoose
-    .connect(connectionString, {
-      useNewUrlParser: true, // Use new url parser instead of default deprecated one
-      useCreateIndex: true, //`ensureIndex` is deprecated, use `createIndex` instead.
-      keepAlive: true,
-      useUnifiedTopology: true
-    })
-    .catch(console.err);
+  const mongoServer = new MongoMemoryServer();
+
+  return mongoServer.getConnectionString().then(mongoUri => {
+    const mongooseOpts = {
+      useNewUrlParser: true,
+      autoReconnect: true,
+      reconnectTries: Number.MAX_VALUE,
+      reconnectInterval: 1000
+    };
+
+    mongoose.connect(mongoUri, mongooseOpts);
+
+    mongoose.connection.on("error", e => {
+      if (e.message.code === "ETIMEDOUT") {
+        console.log(e);
+        mongoose.connect(mongoUri, mongooseOpts);
+      }
+      console.log(e);
+    });
+
+    mongoose.connection.once("open", () => {
+      console.log(`MongoDB successfully connected to ${mongoUri}`);
+    });
+  });
 };
 
 module.exports.deleteCollections = async function() {
@@ -96,7 +112,8 @@ async function createDummyUser() {
   const userDocument = await User.create({
     firstname: "John",
     lastname: "Doe",
-    googleId: nextGoogleId++
+    googleId: nextGoogleId++,
+    email: `testUser${nextGoogleId}@gmail.com`
   });
 
   return userDocument;
@@ -113,7 +130,7 @@ function createDummyReport(taskId) {
 
 async function seedDB() {
   /**
-   *  Creates two each of Projects and Users, then assigns permissions
+   *  Creates several instances of Projects and Users, then assigns permissions
    *  such that we have an instance of each type of user -> project
    *  relationship (i.e. user is unauthorized, user has READ, user has ADMIN)
    */
@@ -123,12 +140,19 @@ async function seedDB() {
   const testUser3 = await createDummyUser();
 
   const testProject1 = await createDummyProject();
+  const testProject2 = await createDummyProject();
 
   await Permission.create({
     user: testUser1.id,
     project: testProject1.id,
     level: "ADMIN"
   });
+  await Permission.create({
+    user: testUser1.id,
+    project: testProject2.id,
+    level: "ADMIN"
+  });
+
   await Permission.create({
     user: testUser2.id,
     project: testProject1.id,

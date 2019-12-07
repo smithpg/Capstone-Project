@@ -5,6 +5,7 @@ import _ from "lodash";
 import Tracking from "./Tracking";
 
 import * as treeHelpers from "../../helpers/tree";
+import { isNullOrUndefined } from "util";
 
 class ProjectPage extends React.Component {
   constructor(props) {
@@ -12,7 +13,8 @@ class ProjectPage extends React.Component {
 
     this.state = {
       selectedTask: null,
-      project: null,
+      projectTitle: null,
+      projectTree: null,
       reports: null
     };
   }
@@ -22,7 +24,8 @@ class ProjectPage extends React.Component {
       .then(res => res.json())
       .then(proj => {
         this.setState({
-          project: proj
+          projectTitle: proj.title,
+          projectTree: proj.tree
         });
       })
       .catch(console.log);
@@ -38,47 +41,56 @@ class ProjectPage extends React.Component {
     })
       .then(res => res.json())
       .then(newTask => {
-        const newProjectTree = treeHelpers.addNode(this.state.project, newTask, taskData.parent)
+        const newProjectTree = treeHelpers.addNode(
+          this.state.projectTree,
+          newTask,
+          taskData.parent
+        );
 
-        this.setState({project: newProjectTree})
+        this.setState({ projectTree: newProjectTree });
       });
   };
 
   removeTask = id => {
-    fetch('/api/projects/' + this.props.projectId + '/tasks/' + id, {
+    fetch("/api/projects/" + this.props.projectId + "/tasks/" + id, {
       method: "DELETE"
     })
       .then(res => {
         if (res.status === 204) {
-          const newProjectTree = treeHelpers.removeSubtree(this.props.project, id);
+          const newProjectTree = treeHelpers.removeSubtree(
+            this.state.projectTree,
+            id
+          );
 
-          this.setState({ project: newProjectTree })
+          this.setState({ projectTree: newProjectTree });
         }
       })
-      .catch(console.log)
-    }
-    
-    updateTask = (taskId, update) => {
-      fetch('/api/projects/' + this.props.projectId + '/tasks/' + taskId, {
-        method: "PUT",
-        body: JSON.stringify(update)
+      .catch(console.log);
+  };
+
+  updateTask = (taskId, update) => {
+    console.log(JSON.stringify(update));
+
+    return fetch("/api/projects/" + this.props.projectId + "/tasks/" + taskId, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(update)
+    })
+      .then(res => {
+        if (res.status < 400) {
+          const newProjectTree = treeHelpers.editNode(
+            this.state.projectTree,
+            taskId,
+            update
+          );
+
+          this.setState({ projectTree: newProjectTree });
+        }
       })
-        .then(res => {
-          if (res.status === 200) {
-            const newProjectTree = treeHelpers.editNode(this.props.project, taskId, update);
-  
-            this.setState({ project: newProjectTree })
-          }
-        })
-        .catch(console.log)
-      
-
-
-
-
-
-  }
-
+      .catch(console.log);
+  };
 
   render() {
     return (
@@ -89,7 +101,8 @@ class ProjectPage extends React.Component {
           removeTask={this.removeTask}
           updateTask={this.updateTask}
           retrieveNode={this.retrieveNode}
-          projectId={this.state.project}
+          project={this.state.projectTree}
+          projectTitle={this.state.projectTitle}
         ></ProjectTree>
 
         {/* <Tracking
@@ -106,75 +119,37 @@ class ProjectPage extends React.Component {
           handleDeleteWritePermission={this.handleDeleteWritePermission}
         >
         </Tracking>*/}
-        
       </AppContainer>
-    );  
-  }
-
-  fetchProject = () => {
-    fetch('/api/projects/' + this.state.projectId)
-    .then(res => {
-      console.log(res)
-      return res.json()
-    })
-    .then(proj => {
-      this.setState({
-        selectedProject: proj
-      }, () => {
-        if (this.state.selectedTask !== null && this.state.selectedTask !== undefined) {
-          this.retrieveTask();
-        }
-      })
-    })
-    .catch(console.log)
+    );
   }
 
   retrieveTask = () => {
     const task = this.retrieveNode(this.state.taskId);
     if (task !== null && task !== undefined) {
-      this.setState({
-        selectedTask: task,
-        reports: task.reports
-      }, console.log(this.state))
+      this.setState(
+        {
+          selectedTask: task,
+          reports: task.reports
+        },
+        console.log(this.state)
+      );
     }
-  }
+  };
 
   // on selecting a task in the tree
   onSelect = (keys, info) => {
-    this.setState({
-      taskId: keys[0]
-    }, () => this.retrieveTask());
-  }
+    this.setState(
+      {
+        taskId: keys[0]
+      },
+      () => this.retrieveTask()
+    );
+  };
 
   // return task with given key
-  retrieveNode = (id) => {
-
-    function traverse(root) {
-      if (root === null) {
-        return null;
-      } else if (root._id === id) {
-        return root;
-      } else {
-        return search(root.children);
-      }
-    }
-
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        const node = traverse(array[i]);
-        if (node != null) {
-          return node;
-        }
-      }
-      return null;
-    }
-
-    return search(this.state.selectedProject.tree);
-  }
-
-  
-
- 
+  retrieveNode = id => {
+    return treeHelpers.retrieveNode(this.state.projectTree, id);
+  };
 
   retrieveRoot = (data, key) => {
     function isChild(data, key) {

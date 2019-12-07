@@ -91,50 +91,50 @@ class ProjectsList extends React.Component {
       .catch(console.log);
   };
 
-  // // begin editing item in project tree
-  // handleEditItemClick = (id, event) => {
-  //   this.setState({
-  //     editing: id
-  //   });
+  // begin editing item in project tree
+  handleEditItemClick = (id, event) => {
+    this.setState({
+      editing: id
+    });
 
-  //   event.stopPropagation();
-  // };
+    event.stopPropagation();
+  };
 
-  // // handle actual editing of item in project tree
-  // handleEditItem = (id, content, event) => {
-  //   const data = Array.from(this.state.data);
-  //   const node = this.retrieveNode(id, data);
-  //   node.project.title = content;
+  // handle actual editing of item in project tree
+  handleEditItem = (id, content, event) => {
+    const data = Array.from(this.state.data);
+    const node = this.retrieveNode(id, data);
+    node.project.title = content;
 
-  //   this.setState({
-  //     data: data
-  //   });
+    this.setState({
+      data: data
+    });
 
-  //   event.stopPropagation();
-  // };
+    event.stopPropagation();
+  };
 
-  // // handle done editing button
-  // handleDoneEditingClick = (id, event) => {
-  //   const node = this.retrieveNode(id, this.state.data);
-  //   const newTitle = node.project.title;
+  // handle done editing button
+  handleDoneEditingClick = (id, event) => {
+    const node = this.retrieveNode(id, this.state.data);
+    const newTitle = node.project.title;
 
-  //   fetch("/api/projects/" + this.state.editing, {
-  //     method: "PUT",
-  //     headers: {
-  //       "Content-Type": "application/json"
-  //     },
-  //     body: JSON.stringify({
-  //       title: newTitle
-  //     })
-  //   })
-  //     .then(() => this.fetchProjects())
-  //     .catch(console.log);
+    fetch("/api/projects/" + this.state.editing, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: newTitle
+      })
+    })
+      .then(() => this.fetchProjects())
+      .catch(console.log);
 
-  //   this.setState({
-  //     editing: null
-  //   });
-  //   event.stopPropagation();
-  // };
+    this.setState({
+      editing: null
+    });
+    event.stopPropagation();
+  };
 
   render() {
     return (
@@ -158,11 +158,8 @@ class ProjectsList extends React.Component {
           console.log(obj.project);
           return (
             <li>
-              <strong>{project.title}d</strong>
-              <Link to={`/projects/${project._id}`}>View</Link>
-              <button onClick={e => this.handleRemoveItemClick(project._id, e)}>
-                X
-              </button>
+              <strong>{project.title}</strong>
+              {this.renderIcons(obj)}
             </li>
           );
         })}

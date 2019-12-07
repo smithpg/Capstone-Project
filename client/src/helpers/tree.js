@@ -4,11 +4,10 @@ import _ from "lodash";
 
 // const testTree = [{ _id: 1, children: [{ _id: 11, children: [{ _id: 111, children: [] }] }] }, { _id: 2, children: [{ _id: 21, children: [] }, { _id: 22, children: [] }]}, { _id: 3, children: []}]
 
-
 // function retrieveNode(tree, targetId){
-    
+
 //     console.log("retrieve :: ", tree)
-    
+
 //     function traverse(root) {
 //         if (root._id === targetId) {
 //             return root;
@@ -33,7 +32,6 @@ import _ from "lodash";
 
 // function addNode(tree, node, parentId){
 
-
 //     const clonedTree = _.cloneDeep(tree);
 //     // If this was a top level task
 //     if (!parentId) {
@@ -48,14 +46,14 @@ import _ from "lodash";
 // }
 
 // function removeSubtree(tree, nodeId){
-    
+
 //     const clonedTree = _.cloneDeep(tree);
-    
+
 //     for (let topLevelNode of clonedTree){
-        
+
 //         _processNode(topLevelNode);
 //     }
-    
+
 //     return clonedTree;
 
 //     function _containsTargetNode(array){
@@ -76,7 +74,7 @@ import _ from "lodash";
 // }
 
 // function editNode(tree, nodeId, update){
-    
+
 //     const targetNode = retrieveNode(tree, nodeId);
 //     if (update.parent){
 //         // If the node is being moved within the tree
@@ -85,103 +83,97 @@ import _ from "lodash";
 
 //         const newParent = retrieveNode(tree, update.parent);
 //         newParent.children.push(targetNode)
-//     } 
+//     }
 
 //     Object.assign(targetNode, update);
 
 //     return _.cloneDeep(tree);
 // }
 
-export function retrieveNode(tree, targetId){
-    
-    console.log("retrieve :: ", tree)
-    
-console.log(targetId)
-
-    function traverse(root) {
-        if (root._id === targetId) {
-            return root;
-        } else if (root.children) {
-            return search(root.children);
-        }
-
-        return null;
+export function retrieveNode(tree, targetId) {
+  function traverse(root) {
+    if (root._id === targetId) {
+      return root;
+    } else if (root.children) {
+      return search(root.children);
     }
 
-    function search(array) {
-        if (!array || array.length < 1 ) return null;
-        for (var i = 0; i < array.length; i++) {
-            
-            console.log(array[i]);
+    return null;
+  }
 
-            
-            
-            const node = traverse(array[i]);
-            if (node != null) {
-                return node;
-            }
-        }
+  function search(array) {
+    if (!array || array.length < 1) return null;
+    for (var i = 0; i < array.length; i++) {
+      console.log(array[i]);
+
+      const node = traverse(array[i]);
+      if (node != null) {
+        return node;
+      }
     }
-    return search(tree);
+  }
+  return search(tree);
 }
 
-export function addNode(tree, node, parentId){
+export function addNode(tree, node, parentId) {
+  const newTree = tree ? _.cloneDeep(tree) : [];
+  // If this was a top level task
+  if (!parentId) {
+    newTree.push(node);
+  } else {
+    const parent = retrieveNode(newTree, parentId);
 
+    parent.children.push(node);
+  }
 
-    const clonedTree = _.cloneDeep(tree);
-    // If this was a top level task
-    if (!parentId) {
-        clonedTree.tree.push(node);
-    } else {
-        const parent = retrieveNode(clonedTree, parentId);
-
-        parent.children.push(node);
-    }
-
-    return clonedTree;
+  return newTree;
 }
 
-export function removeSubtree(tree, nodeId){
-    
-    const clonedTree = _.cloneDeep(tree);
-    
-    for (let topLevelNode of clonedTree){
-        
-        _processNode(topLevelNode);
-    }
-    
-    return clonedTree;
+export function removeSubtree(tree, nodeId) {
+  const clonedTree = _.cloneDeep(tree);
 
-    function _containsTargetNode(array){
-        return array.some(element => element._id === nodeId)
+  for (let topLevelNode of clonedTree) {
+    if (topLevelNode._id === nodeId) {
+      return clonedTree.filter(topLevelNode => topLevelNode._id !== nodeId);
     }
 
-    function _processNode(node){
-        if (_containsTargetNode(node.children)){
-            node.children = node.children.filter(child =>
-                child._id !== nodeId
-            )
-        }
+    _processNode(topLevelNode);
+  }
 
-        else if (node.children.length > 0) {
-            node.children.forEach(child => _processNode(child))
-        }
+  return clonedTree;
+
+  function _containsTargetNode(array) {
+    return array.some(element => element._id === nodeId);
+  }
+
+  function _processNode(node) {
+    if (_containsTargetNode(node.children)) {
+      node.children = node.children.filter(child => child._id !== nodeId);
+    } else if (node.children.length > 0) {
+      node.children.forEach(child => _processNode(child));
     }
+  }
 }
 
-export function editNode(tree, nodeId, update){
-    
-    const targetNode = retrieveNode(tree, nodeId);
-    if (update.parent){
-        // If the node is being moved within the tree
-        const originalParent = retrieveNode(tree, targetNode.parent);
-        originalParent.children = originalParent.children.filter(child => child._id !== nodeId)
+export function editNode(tree, nodeId, update) {
+  console.log(arguments);
 
-        const newParent = retrieveNode(tree, update.parent);
-        newParent.children.push(targetNode)
-    } 
+  const targetNode = retrieveNode(tree, nodeId);
+  if (update.parent) {
+    // If the node is being moved within the tree
+    const originalParent = retrieveNode(tree, targetNode.parent);
+    originalParent.children = originalParent.children.filter(
+      child => child._id !== nodeId
+    );
 
-    Object.assign(targetNode, update);
+    const newParent = retrieveNode(tree, update.parent);
+    newParent.children.push(targetNode);
+  }
 
-    return _.cloneDeep(tree);
+  console.log("targetNode", targetNode);
+
+  Object.assign(targetNode, update);
+  console.log("targetNode", targetNode);
+
+  return _.cloneDeep(tree);
 }
