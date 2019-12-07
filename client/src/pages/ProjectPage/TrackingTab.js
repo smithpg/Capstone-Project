@@ -4,10 +4,7 @@ import HighchartsReact from 'highcharts-react-official'
 
 function TrackingTab(props) {
 
-    var data = allDataPointsForNode();
-
-    console.log("DATA")
-    console.log(data)
+    var data = Array.from(allDataPointsForNode());
 
     data.map(datapoint => {
         datapoint.datemillis = props.dateInMillisFromString(datapoint.date);
@@ -17,6 +14,7 @@ function TrackingTab(props) {
     });
 
     data = squash(data);
+    data = sumEachProgressValue(data);
 
     const remaining = data.map(datapoint => {
         return [datapoint.datemillis, datapoint.remaining];
@@ -68,7 +66,14 @@ function TrackingTab(props) {
     function allDataPointsForNode() {
     
         function collect(root, datapoints) {
-          var data = datapoints.concat(root.reports);
+          var data = [];
+          for (var i = 0; i < root.reports.length; i++) {
+              data.splice(data.length, 0, {
+                  date: root.reports[i].date,
+                  progress: root.reports[i].progress,
+                  remaining: root.reports[i].remaining
+              })
+          }
           for (var i = 0; i < root.children.length; i++) {
             data = collect(root.children[i], Array.from(data));
           }
@@ -92,6 +97,14 @@ function TrackingTab(props) {
             index += 1;
         }
         return datapoints;
+    }
+
+    // make each datapoint's progress the sum of all previous progress points
+    function sumEachProgressValue(data) {
+        for (var i = 1; i < data.length; i++) {
+            data[i].progress += data[i-1].progress;
+        }
+        return data;
     }
 }
 
