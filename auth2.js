@@ -3,14 +3,14 @@ const User = require("./data/user");
 
 module.exports = function(passport) {
   passport.serializeUser((user, done) => {
-    console.log("serializeUser gets ", user);
+    //console.log("serializeUser gets ", user);
 
     done(null, user._id);
   });
   passport.deserializeUser((userId, done) => {
     // retrieve user document from db
-    console.log("deserializing");
-    console.log(userId);
+    //console.log("deserializing");
+    //console.log(userId);
 
     User.findById(userId, (err, user) => {
       if (err) {
@@ -33,7 +33,7 @@ module.exports = function(passport) {
           name: { familyName, givenName }
         } = profile;
 
-        console.log(profile.emails[0].value);
+        //console.log(profile.emails[0].value);
 
         User.findOne({ googleId: profile.id }, async function(err, user) {
           if (err) {
@@ -53,7 +53,7 @@ module.exports = function(passport) {
             });
           } else {
             //user found
-            console.log("USER EXISTED");
+            //console.log("USER EXISTED");
             return done(err, user);
           }
         });
