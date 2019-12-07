@@ -5,41 +5,46 @@ import SummaryTab from './SummaryTab'
 import TrackingTab from './TrackingTab'
 import PermissionsTab from './PermissionsTab'
 
-function Tracking(props) {
+class Tracking extends React.Component {
 
-    const root = props.retrieveNode(props.data, props.project);
+    constructor(props) {
+        super(props);
 
-    function renderTitle() {
-        if (props.selected != null && props.selectedTab != 'permissions') {
-            const selected = props.retrieveNode(props.data, props.selected);
-            return <h1>{selected.content}</h1>
+        this.state = {
+            selectedTab: 'data'
+        };
+    }
+
+    componentDidMount() {
+    }
+
+    renderTitle = () => {        
+        if (this.props.selectedTask !== null && this.props.selectedTask !== undefined && this.state.selectedTab != 'permissions') {
+            return <h1>{this.props.selectedTask.title}</h1>
         }
         return <h1></h1>
     }
 
-    function renderDataTab() {
-        return (
-            <DataTab
-                retrieveNode={props.retrieveNode}
-                data={props.data}
-                selected={props.selected}
-                formValues={props.formValues}
-                handleFormSubmit={props.handleFormSubmit}
-                handleDateChange={props.handleDateChange}
-                handleUsernameChange={props.handleUsernameChange}
-                handleProgressChange={props.handleProgressChange}
-                handleRemainingChange={props.handleRemainingChange}
-                handleDeleteTrackingDatapoint={props.handleDeleteTrackingDatapoint}
-                dateInMillisFromString={props.dateInMillisFromString}
-            ></DataTab>
-        );
+    renderDataTab = () => {
+        if (this.props.selectedTask !== null && this.props.selectedTask !== undefined) {
+            return (
+                <DataTab
+                    taskId={this.props.taskId}
+                    selectedTask={this.props.selectedTask}
+                    projectId={this.props.projectId}
+                    selectedProject={this.props.selectedProject}
+                    fetchProject={this.props.fetchProject}
+                    reports={this.reports}
+                ></DataTab>
+            );
+        }
     }
 
-    function renderSummaryTab() {
+    /*
+    renderSummaryTab = () => {
         if (props.selected != null) {
             return (
                 <SummaryTab
-                    data={props.data}
                     selected={props.selected}
                     calculateSummaryData={props.calculateSummaryData}
                     retrieveNode={props.retrieveNode}
@@ -62,7 +67,7 @@ function Tracking(props) {
         
     }
 
-    function renderTrackingTab() {
+    renderTrackingTab = () => {
         if (props.selected != null) {
             return (
                 <TrackingTab
@@ -82,12 +87,12 @@ function Tracking(props) {
                 </TrackingTab>
             )
         } else {
-            return (<React.Fragment></React.Fragment>)
+            return (<React.Fragment></React.Fragment>);
         }
         
     }
 
-    function renderPermissionsTab() {
+    renderPermissionsTab = () => {
         return (
             <PermissionsTab
                 data={props.data}
@@ -104,44 +109,102 @@ function Tracking(props) {
             </PermissionsTab>
         );
     }
+    */
 
-    function renderTab(node) {
+    renderTab = (node) => {
 
-        if (props.selected != null && props.selectedTab == 'data') {
-            return renderDataTab();
-        } else if (props.selectedTab == 'summary') {
-            return renderSummaryTab();
-        } else if (props.selectedTab == 'tracking') {
-            return renderTrackingTab();
-        } else if (props.selectedTab == 'permissions') {
-            return renderPermissionsTab();
+        if (this.props.selectedTask !== null && this.state.selectedTab == 'data') {
+            return this.renderDataTab();
+        } else if (this.state.selectedTab == 'summary') {
+            //return renderSummaryTab();
+        } else if (this.state.selectedTab == 'tracking') {
+            //return renderTrackingTab();
+        } else if (this.state.selectedTab == 'permissions') {
+            //return renderPermissionsTab();
         }
     }
 
-    return (
-        <Container>
-            <TabGroup>
-                <Tab
-                    onClick={() => props.handleSummaryTabClick()}
-                >Summary</Tab>
-                <Tab
-                    onClick={() => props.handleDataTabClick()}
-                >Data</Tab>
-                <Tab
-                    onClick={() => props.handleTrackingTabClick()}
-                >Tracking</Tab>
-                <Tab
-                    onClick={() => props.handlePermissionsTabClick()}
-                >Permissions</Tab>
-            </TabGroup>
-            <TitleContainer>
-                {renderTitle()}
-            </TitleContainer>
-            <TabContentContainer>
-                {renderTab()}
-            </TabContentContainer>
-        </Container>
-    );
+    // return task with given key
+  retrieveNode = (id) => {
+
+        function traverse(root) {
+        console.log(root)
+        if (root === null) {
+            return null;
+        } else if (root._id === id) {
+            return root;
+        } else {
+            return search(root.children);
+        }
+        }
+
+        function search(array) {
+        for (var i = 0; i < array.length; i++) {
+            const node = traverse(array[i]);
+            if (node != null) {
+            return node;
+            }
+        }
+        return null;
+        }
+
+        return search(this.state.project);
+    }
+
+    render() {
+        return (
+            <Container>
+                <TabGroup>
+                    <Tab
+                        onClick={() => this.handleSummaryTabClick()}
+                    >Summary</Tab>
+                    <Tab
+                        onClick={() => this.handleDataTabClick()}
+                    >Data</Tab>
+                    <Tab
+                        onClick={() => this.handleTrackingTabClick()}
+                    >Tracking</Tab>
+                    <Tab
+                        onClick={() => this.handlePermissionsTabClick()}
+                    >Permissions</Tab>
+                </TabGroup>
+                <TitleContainer>
+                    {this.renderTitle()}
+                </TitleContainer>
+                <TabContentContainer>
+                    {this.renderTab()}
+                </TabContentContainer>
+            </Container>
+        );
+    }
+    
+
+    // load summary tab for selected project
+  handleSummaryTabClick = () => {
+    this.setState({
+      selectedTab: "summary"
+    })
+  }
+
+  // load data tab for selected project
+  handleDataTabClick = () => {
+    this.setState({
+      selectedTab: "data"
+    })
+  }
+
+  // load tracking tab for selected project
+  handleTrackingTabClick = () => {
+    this.setState({
+      selectedTab: "tracking"
+    })
+  }
+
+  handlePermissionsTabClick = () => {
+    this.setState({
+      selectedTab: "permissions"
+    })
+  }
 }
 
 const Container = styled.div`

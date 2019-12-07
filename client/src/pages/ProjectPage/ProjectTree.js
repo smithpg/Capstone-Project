@@ -16,18 +16,7 @@ class ProjectTree extends React.Component {
   }
 
   componentDidMount() {
-    this.fetchProject();
-  }
-
-  fetchProject = () => {
-    fetch('/api/projects/' + this.props.id)
-    .then(res => res.json())
-    .then(proj => {
-      this.setState({
-        project: proj
-      })
-    })
-    .catch(console.log)
+    this.props.fetchProject();
   }
 
   render() {
@@ -37,11 +26,11 @@ class ProjectTree extends React.Component {
           {this.renderHeader()}
           <Tree
             blockNode
-            draggable={true}
+            draggable={false}
             //onDrop={this.onDrop}
             onSelect={this.props.onSelect}
           >
-            {this.renderTree(this.state.project)}
+            {this.renderTree(this.props.selectedProject)}
           </Tree>
         </div>
       </Container>
@@ -53,15 +42,15 @@ class ProjectTree extends React.Component {
       if (node.tree) {
         return node.tree.map(child => {
           if (child.children && child.children.length) {
-            if (this.state.editing === child.id) {
+            if (this.state.editing === child._id) {
               return (
-                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                <TreeNode key={child._id} title={this.renderEditableTreeNode(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                <TreeNode key={child._id} title={this.renderTreeNodeContent(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -86,17 +75,16 @@ class ProjectTree extends React.Component {
         });
       } else {
         return node.children.map(child => {
-          console.log(child)
           if (child.children && child.children.length) {
-            if (this.state.editing === child.id) {
+            if (this.state.editing === child._id) {
               return (
-                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                <TreeNode key={child._id} title={this.renderEditableTreeNode(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                <TreeNode key={child._id} title={this.renderTreeNodeContent(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -182,10 +170,10 @@ class ProjectTree extends React.Component {
   }
 
   renderHeader = ()  => {
-    if (this.state.project != null) {
+    if (this.props.selectedProject !== null) {
       return (
         <HeaderContainer>
-          <Header>{this.state.project.title}</Header>
+          <Header>{this.props.selectedProject.title}</Header>
           <HeaderIconContainer>
             <Icon
               type="plus"
@@ -196,51 +184,6 @@ class ProjectTree extends React.Component {
         </HeaderContainer>
       );
     }
-  }
-
-  // add top level task to project tree
-  handleAddTopLevelProjectItemClick = () => {
-    fetch('/api/projects/' + this.props.id +'/tasks/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: "new content",
-
-      })
-    })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
-  }
-
-  // adding child to a project tree item
-  handleAddChildClick = (parentId, event) => {
-    fetch('/api/projects/' + this.props.id +'/tasks/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: "new content",
-        parent: parentId
-      })
-    })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
-
-    event.stopPropagation();
-  }
-
-  // removing project from project tree
-  handleRemoveItemClick = (id, event) => {
-    fetch('/api/projects/' + this.props.id + '/tasks/' + id, {
-      method: "DELETE"
-    })
-    .then(() => this.fetchProject())
-    .catch(console.log)
-
-    event.stopPropagation();
   }
 
   // return task with given key
@@ -267,7 +210,52 @@ class ProjectTree extends React.Component {
       return null;
     }
 
-    return search(this.state.project);
+    return search(this.props.selectedProject.tree);
+  }
+
+  // add top level task to project tree
+  handleAddTopLevelProjectItemClick = () => {
+    fetch('/api/projects/' + this.props.projectId +'/tasks/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: "new content",
+
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.props.fetchProject())
+  }
+
+  // adding child to a project tree item
+  handleAddChildClick = (parentId, event) => {
+    fetch('/api/projects/' + this.props.projectId +'/tasks/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        title: "new content",
+        parent: parentId
+      })
+    })
+    .then(res => console.log(res))
+    .then(() => this.props.fetchProject())
+
+    event.stopPropagation();
+  }
+
+  // removing project from project tree
+  handleRemoveItemClick = (id, event) => {
+    fetch('/api/projects/' + this.props.projectId + '/tasks/' + id, {
+      method: "DELETE"
+    })
+    .then(() => this.props.fetchProject())
+    .catch(console.log)
+
+    event.stopPropagation();
   }
 
   // begin editing item in project tree
@@ -294,7 +282,7 @@ class ProjectTree extends React.Component {
 
   // handle done editing button
   handleDoneEditingClick = (id, event) => {
-    fetch('/api/projects/' + this.props.id +'/tasks/' + id, {
+    fetch('/api/projects/' + this.props.projectId +'/tasks/' + id, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -304,7 +292,7 @@ class ProjectTree extends React.Component {
       })
     })
     .then(res => console.log(res))
-    .then(() => this.fetchProject())
+    .then(() => this.props.fetchProject())
 
     this.setState({
       editing: null,

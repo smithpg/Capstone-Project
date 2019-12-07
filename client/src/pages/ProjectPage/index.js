@@ -9,13 +9,16 @@ class ProjectPage extends React.Component {
     super(props)
 
     this.state = {
-      id: props.match.params.projectId,
-      selected: null,
+      projectId: props.match.params.projectId,
+      selectedProject: null,
+      taskId: null,
+      selectedTask: null,
+      reports: null
     }
   }
 
   componentDidMount() {
-    
+    this.fetchProject();
   }
 
   render() {
@@ -23,34 +26,27 @@ class ProjectPage extends React.Component {
       <AppContainer>
         <ProjectTree
           onSelect={this.onSelect}
-          id={this.props.match.params.projectId}
+          projectId={this.state.projectId}
+          selectedProject={this.state.selectedProject}
+          retrieveNode={this.retrieveNode}
+          fetchProject={this.fetchProject}
         >
         </ProjectTree>
-        
-      </AppContainer>
-    );  
-  }
-
-  /*
-<Tracking
-          selected={this.selected}
-          data={this.data}
-          retrieveNode={this.retrieveNode}
+        <Tracking
+          taskId={this.state.taskId}
+          selectedTask={this.state.selectedTask}
+          projectId={this.state.projectId}
+          selectedProject={this.state.selectedProject}
+          reports={this.reports}
+          fetchProject={this.fetchProject}
           formValues={this.formValues}
           selectedTab={this.selectedTab}
           handleSummaryTabClick={this.handleSummaryTabClick}
           handleDataTabClick={this.handleDataTabClick}
           handleTrackingTabClick={this.handleTrackingTabClick}
           handlePermissionsTabClick={this.handlePermissionsTabClick}
-          handleFormSubmit={this.handleFormSubmit}
-          handleDateChange={this.handleDateChange}
-          handleUsernameChange={this.handleUsernameChange}
-          handleProgressChange={this.handleProgressChange}
-          handleRemainingChange={this.handleRemainingChange}
-          handleDeleteTrackingDatapoint={this.handleDeleteTrackingDatapoint}
           calculateSummaryData={this.calculateSummaryData}
           allDataPointsForNode={this.allDataPointsForNode}
-          dateInMillisFromString={this.dateInMillisFromString}
           retrieveRoot={this.retrieveRoot}
           handlePermissionFormSubmit={this.handlePermissionFormSubmit}
           handleUsernamePermChange={this.handleUsernamePermChange}
@@ -61,143 +57,64 @@ class ProjectPage extends React.Component {
           project={this.props.match.params.projectId}
         >
         </Tracking>
-  */
+        
+      </AppContainer>
+    );  
+  }
 
-  // on selecting a project in the tree
+  fetchProject = () => {
+    fetch('/api/projects/' + this.state.projectId)
+    .then(res => {
+      console.log(res)
+      return res.json()
+    })
+    .then(proj => {
+      this.setState({
+        selectedProject: proj
+      })
+    })
+    .catch(console.log)
+  }
+
+  retrieveTask = () => {
+    const task = this.retrieveNode(this.state.taskId);
+    this.setState({
+      selectedTask: task,
+      reports: task.reports
+    }, console.log(this.state))
+  }
+
+  // on selecting a task in the tree
   onSelect = (keys, info) => {
     this.setState({
-      selected: keys[0]
-    });
+      taskId: keys[0]
+    }, () => this.retrieveTask());
   }
 
-  // load summary tab for selected project
-  handleSummaryTabClick = () => {
-    this.setState({
-      selectedTab: "summary"
-    })
-  }
+  // return task with given key
+  retrieveNode = (id) => {
 
-  // load data tab for selected project
-  handleDataTabClick = () => {
-    this.setState({
-      selectedTab: "data"
-    })
-  }
-
-  // load tracking tab for selected project
-  handleTrackingTabClick = () => {
-    this.setState({
-      selectedTab: "tracking"
-    })
-  }
-
-  handlePermissionsTabClick = () => {
-    this.setState({
-      selectedTab: "permissions"
-    })
-  }
-
-  // handle adding data for an item
-  handleFormSubmit = event => {
-    event.preventDefault();
-    const trackingData = {};
-    trackingData.username = this.state.formValues.username;
-    trackingData.date = this.state.formValues.date;
-    trackingData.progress = this.state.formValues.progress;
-    trackingData.remaining = this.state.formValues.remaining;
-    trackingData.key = Math.floor(Math.random()*1000);
-    const node = this.retrieveNode(this.state.data, this.state.selected);
-    node.data.splice(node.data.length, 0, trackingData);
-    node.data = this.sortTrackingData(node.data);
-    this.setState({
-      formValues: {
-        date: '',
-        username: '',
-        progress: '',
-        remaining: ''
-      }
-    });
-  }
-
-  // sort tracking data by date
-  sortTrackingData = data => {
-    var trackingData = Array.from(data);
-    trackingData.sort((a,b) => {
-      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
-    });
-    return trackingData;
-  }
-
-  // calulate date in milliseconds from date string
-  dateInMillisFromString = dateStr => {
-    const components = dateStr.split("-");
-    const year = parseInt(components[0])
-    const month = parseInt(components[1]) - 1;
-    const day = parseInt(components[2]);
-    return (new Date(year, month, day)).getTime();
-}
-
-  // handle date entry
-  handleDateChange = event => {
-    this.setState({
-      formValues: {
-        date: event.target.value,
-        username: this.state.formValues.username,
-        progress: this.state.formValues.progress,
-        remaining: this.state.formValues.remaining
-      }
-    });
-  }
-
-  // handle username entry
-  handleUsernameChange = event => {
-    this.setState({
-      formValues: {
-        date: this.state.formValues.date,
-        username: event.target.value,
-        progress: this.state.formValues.progress,
-        remaining: this.state.formValues.remaining
-      }
-    });
-  }
-
-  // handle progress entry
-  handleProgressChange = event => {
-    this.setState({
-      formValues: {
-        date: this.state.formValues.date,
-        username: this.state.formValues.username,
-        progress: Number(event.target.value),
-        remaining: this.state.formValues.remaining
-      }
-    });
-  }
-
-  // handle remaining entry
-  handleRemainingChange = event => {
-    this.setState({
-      formValues: {
-        date: this.state.formValues.date,
-        username: this.state.formValues.username,
-        progress: this.state.formValues.progress,
-        remaining: Number(event.target.value)
-      }
-    });
-  }
-
-  // handle deleting a tracking data point
-  handleDeleteTrackingDatapoint = (nodeKey, trackingKey) => {
-    var data = Array.from(this.state.data);
-    const node = this.retrieveNode(data, nodeKey);
-    for (var i = 0; i < node.data.length; i++) {
-      if (node.data[i].key == trackingKey) {
-        node.data.splice(i, 1);
-        break;
+    function traverse(root) {
+      if (root === null) {
+        return null;
+      } else if (root._id === id) {
+        return root;
+      } else {
+        return search(root.children);
       }
     }
-    this.setState({
-      data: data
-    });
+
+    function search(array) {
+      for (var i = 0; i < array.length; i++) {
+        const node = traverse(array[i]);
+        if (node != null) {
+          return node;
+        }
+      }
+      return null;
+    }
+
+    return search(this.state.selectedProject.tree);
   }
 
   // calculate summary data for a node
@@ -229,7 +146,7 @@ class ProjectPage extends React.Component {
     }
 
     function percentComplete(progress, total) {
-      if (total == 0) {
+      if (total === 0) {
         return '0%'
       } else {
         return String(Math.round(100 * 100 * progress / total) / 100) + '%';
@@ -266,7 +183,7 @@ class ProjectPage extends React.Component {
     
     function isChild(data, key) {
       for (var i = 0; i < data.length; i++) {
-        if (data[i].key == key || isChild(data[i].children, key)) {
+        if (data[i].key === key || isChild(data[i].children, key)) {
           return true;
         }
       }
@@ -274,7 +191,7 @@ class ProjectPage extends React.Component {
     }
 
     for (var i = 0; i < data.length; i++) {
-      if (data[i].key == key || isChild(data[i].children, key)) {
+      if (data[i].key === key || isChild(data[i].children, key)) {
         return data[i];
       }
     }

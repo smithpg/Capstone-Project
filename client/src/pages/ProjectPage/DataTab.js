@@ -2,93 +2,204 @@ import React from "react";
 import styled from "styled-components";
 import { Icon } from "antd";
 
-function DataTab(props) {
-  function renderReviewData() {
-    const node = props.retrieveNode(props.data, props.selected);
+class DataTab extends React.Component {
+
+  constructor(props) {
+    super(props);
+
+    this.state={
+      formValues: {
+        date: '',
+        progress: '',
+        remaining: ''
+      }
+    }
+  }
+
+  componentDidMount() {
+    this.props.fetchProject()
+  }
+
+  renderReviewData = () => {
+    if (this.props.selectedTask !== null && this.props.selectedTask !== undefined) {
+      return (
+        <React.Fragment>
+          {this.props.selectedTask.reports.map(datapoint => (
+            <tr key={datapoint._id}>
+              <td>{datapoint.date}</td>
+              <td>{datapoint.username}</td>
+              <td>{datapoint.progress}</td>
+              <td>{datapoint.remaining}</td>
+              <td>
+                <Icon
+                  type="delete"
+                  onClick={() =>
+                    this.handleDeleteTrackingDatapoint(datapoint._id)
+                  }
+                ></Icon>
+              </td>
+            </tr>
+          ))}
+        </React.Fragment>
+      );
+    }
+  }
+
+  render() {
     return (
-      <React.Fragment>
-        {node.data.map(datapoint => (
-          <tr key={datapoint.key}>
-            <td>{datapoint.date}</td>
-            <td>{datapoint.username}</td>
-            <td>{datapoint.progress}</td>
-            <td>{datapoint.remaining}</td>
-            <td>
-              <Icon
-                type="delete"
-                onClick={() =>
-                  props.handleDeleteTrackingDatapoint(node.key, datapoint.key)
-                }
-              ></Icon>
-            </td>
-          </tr>
-        ))}
-      </React.Fragment>
+      <div margin="16px">
+        <ComponentHeader>
+          <Header>Add Data</Header>
+        </ComponentHeader>
+  
+        <ComponentBody>
+          <form onSubmit={this.handleFormSubmit}>
+            <label>Date: </label>
+            <input
+              type="date"
+              value={this.state.formValues.date}
+              onChange={this.handleDateChange}
+            ></input>
+            <br></br>
+            <label>Progress: </label>
+            <input
+              type="number"
+              min="0"
+              value={this.state.formValues.progress}
+              onChange={this.handleProgressChange}
+            ></input>
+            <br></br>
+            <label>Remaining: </label>
+            <input
+              type="number"
+              min="0"
+              value={this.state.formValues.remaining}
+              onChange={this.handleRemainingChange}
+            ></input>
+            <br></br>
+            <input type="submit" value="Submit"></input>
+          </form>
+        </ComponentBody>
+  
+        <br></br>
+  
+        <ComponentHeader>
+          <Header>Review Data</Header>
+        </ComponentHeader>
+  
+        <ComponentBody>
+          <table width="100%">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Username</th>
+                <th>Progress</th>
+                <th>Remaining</th>
+              </tr>
+            </thead>
+            <tbody>{this.renderReviewData()}</tbody>
+          </table>
+        </ComponentBody>
+      </div>
     );
   }
-  return (
-    <div margin="16px">
-      <ComponentHeader>
-        <Header>Add Data</Header>
-      </ComponentHeader>
+  
+  // handle adding data for an item
+  handleFormSubmit = event => {
+    event.preventDefault();
 
-      <ComponentBody>
-        <form onSubmit={props.handleFormSubmit}>
-          <label>Date: </label>
-          <input
-            type="date"
-            value={props.formValues.date}
-            onChange={props.handleDateChange}
-          ></input>
-          <br></br>
-          <label>Username: </label>
-          <input
-            type="text"
-            value={props.formValues.username}
-            onChange={props.handleUsernameChange}
-          ></input>
-          <br></br>
-          <label>Progress: </label>
-          <input
-            type="number"
-            min="0"
-            value={props.formValues.progress}
-            onChange={props.handleProgressChange}
-          ></input>
-          <br></br>
-          <label>Remaining: </label>
-          <input
-            type="number"
-            min="0"
-            value={props.formValues.remaining}
-            onChange={props.handleRemainingChange}
-          ></input>
-          <br></br>
-          <input type="submit" value="Submit"></input>
-        </form>
-      </ComponentBody>
+    fetch('/api/projects/' + this.props.projectId + '/tasks/' + this.props.taskId + '/reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        task: this.props.taskId,
+        date: this.state.formValues.date,
+        remaining: this.state.formValues.remaining,
+        progress: this.state.formValues.progress
+      })
+    })
+    .then(res => {
+      console.log(res)
+    })
+    .then(() => this.props.fetchProject())
+    .catch(console.log)
 
-      <br></br>
+    this.setState({
+      formValues: {
+        date: '',
+        progress: '',
+        remaining: ''
+      }
+    })
+  }
 
-      <ComponentHeader>
-        <Header>Review Data</Header>
-      </ComponentHeader>
+  // sort tracking data by date
+  sortTrackingData = data => {
+    var trackingData = Array.from(data);
+    trackingData.sort((a,b) => {
+      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
+    });
+    return trackingData;
+  }
 
-      <ComponentBody>
-        <table width="100%">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Username</th>
-              <th>Progress</th>
-              <th>Remaining</th>
-            </tr>
-          </thead>
-          <tbody>{renderReviewData()}</tbody>
-        </table>
-      </ComponentBody>
-    </div>
-  );
+  // calulate date in milliseconds from date string
+  dateInMillisFromString = dateStr => {
+    const components = dateStr.split("-");
+    const year = parseInt(components[0])
+    const month = parseInt(components[1]) - 1;
+    const day = parseInt(components[2]);
+    return (new Date(year, month, day)).getTime();
+}
+
+  // handle date entry
+  handleDateChange = event => {
+    this.setState({
+      formValues: {
+        date: event.target.value,
+        username: this.state.formValues.username,
+        progress: this.state.formValues.progress,
+        remaining: this.state.formValues.remaining
+      }
+    });
+  }
+
+  // handle progress entry
+  handleProgressChange = event => {
+    this.setState({
+      formValues: {
+        date: this.state.formValues.date,
+        username: this.state.formValues.username,
+        progress: Number(event.target.value),
+        remaining: this.state.formValues.remaining
+      }
+    });
+  }
+
+  // handle remaining entry
+  handleRemainingChange = event => {
+    this.setState({
+      formValues: {
+        date: this.state.formValues.date,
+        username: this.state.formValues.username,
+        progress: this.state.formValues.progress,
+        remaining: Number(event.target.value)
+      }
+    });
+  }
+
+  // handle deleting a tracking data point
+  handleDeleteTrackingDatapoint = (reportId) => {
+    fetch('/api/projects/' + this.props.projectId + '/tasks/' + this.props.taskId + '/reports/' + reportId, {
+      method: 'DELETE',
+    })
+    .then(res => {
+      console.log(res)
+    })
+    .then(() => this.updateData())
+    .catch(console.log)
+  }
 }
 
 const ComponentHeader = styled.div`
