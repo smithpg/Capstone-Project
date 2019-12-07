@@ -1,38 +1,92 @@
 import React from "react";
 import styled from "styled-components";
-import ProjectTree from "./ProjectTree"
-import Tracking from "./Tracking"
+import ProjectTree from "./ProjectTree";
+import _ from "lodash";
+import Tracking from "./Tracking";
 
 class ProjectPage extends React.Component {
-
   constructor(props) {
-    super(props)
+    super(props);
 
     this.state = {
-      id: props.match.params.projectId,
-      selected: null,
-    }
+      selectedTask: null,
+      project: null
+    };
   }
 
   componentDidMount() {
-    
+    fetch("/api/projects/" + this.props.projectId)
+      .then(res => res.json())
+      .then(proj => {
+        this.setState({
+          project: proj
+        });
+      })
+      .catch(console.log);
   }
+
+  createTask = taskData => {
+    return fetch("/api/projects/" + this.props.projectId + "/tasks/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(taskData)
+    })
+      .then(res => res.json())
+      .then(newTask => {
+        const clonedProject = _.cloneDeep(this.state.project);
+        console.log(clonedProject);
+        // If this was a top level task
+        if (!taskData.parent) {
+          clonedProject.tree.push(newTask);
+        } else {
+          const parent = this.retrieveNode(taskData.parent, clonedProject);
+
+          parent.children.push(newTask);
+        }
+
+        this.setState({ project: clonedProject });
+      });
+  };
+
+  // return task with given key
+  retrieveNode = (id, tree) => {
+    console.log(id, tree);
+
+    function traverse(root) {
+      if (root._id === id) {
+        return root;
+      } else if (root.children) {
+        return search(root.children);
+      }
+
+      return null;
+    }
+
+    function search(array) {
+      if (array) return null;
+      for (var i = 0; i < array.length; i++) {
+        const node = traverse(array[i]);
+        if (node != null) {
+          return node;
+        }
+      }
+    }
+    return search(tree);
+  };
 
   render() {
     return (
       <AppContainer>
         <ProjectTree
           onSelect={this.onSelect}
-          id={this.props.match.params.projectId}
-        >
-        </ProjectTree>
-        
-      </AppContainer>
-    );  
-  }
+          createTask={this.createTask}
+          retrieveNode={this.retrieveNode}
+          project={this.state.project}
+        ></ProjectTree>
 
-  /*
-<Tracking
+        {/* <Tracking
           selected={this.selected}
           data={this.data}
           retrieveNode={this.retrieveNode}
@@ -58,44 +112,45 @@ class ProjectPage extends React.Component {
           handleWritePermissionChange={this.handleWritePermissionChange}
           handleDeleteReadPermission={this.handleDeleteReadPermission}
           handleDeleteWritePermission={this.handleDeleteWritePermission}
-          project={this.props.match.params.projectId}
-        >
-        </Tracking>
-  */
+          project={this.state.project}
+        ></Tracking> */}
+      </AppContainer>
+    );
+  }
 
   // on selecting a project in the tree
   onSelect = (keys, info) => {
     this.setState({
       selected: keys[0]
     });
-  }
+  };
 
   // load summary tab for selected project
   handleSummaryTabClick = () => {
     this.setState({
       selectedTab: "summary"
-    })
-  }
+    });
+  };
 
   // load data tab for selected project
   handleDataTabClick = () => {
     this.setState({
       selectedTab: "data"
-    })
-  }
+    });
+  };
 
   // load tracking tab for selected project
   handleTrackingTabClick = () => {
     this.setState({
       selectedTab: "tracking"
-    })
-  }
+    });
+  };
 
   handlePermissionsTabClick = () => {
     this.setState({
       selectedTab: "permissions"
-    })
-  }
+    });
+  };
 
   // handle adding data for an item
   handleFormSubmit = event => {
@@ -105,37 +160,40 @@ class ProjectPage extends React.Component {
     trackingData.date = this.state.formValues.date;
     trackingData.progress = this.state.formValues.progress;
     trackingData.remaining = this.state.formValues.remaining;
-    trackingData.key = Math.floor(Math.random()*1000);
+    trackingData.key = Math.floor(Math.random() * 1000);
     const node = this.retrieveNode(this.state.data, this.state.selected);
     node.data.splice(node.data.length, 0, trackingData);
     node.data = this.sortTrackingData(node.data);
     this.setState({
       formValues: {
-        date: '',
-        username: '',
-        progress: '',
-        remaining: ''
+        date: "",
+        username: "",
+        progress: "",
+        remaining: ""
       }
     });
-  }
+  };
 
   // sort tracking data by date
   sortTrackingData = data => {
     var trackingData = Array.from(data);
-    trackingData.sort((a,b) => {
-      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
+    trackingData.sort((a, b) => {
+      return (
+        this.dateInMillisFromString(a.date) -
+        this.dateInMillisFromString(b.date)
+      );
     });
     return trackingData;
-  }
+  };
 
   // calulate date in milliseconds from date string
   dateInMillisFromString = dateStr => {
     const components = dateStr.split("-");
-    const year = parseInt(components[0])
+    const year = parseInt(components[0]);
     const month = parseInt(components[1]) - 1;
     const day = parseInt(components[2]);
-    return (new Date(year, month, day)).getTime();
-}
+    return new Date(year, month, day).getTime();
+  };
 
   // handle date entry
   handleDateChange = event => {
@@ -147,7 +205,7 @@ class ProjectPage extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   // handle username entry
   handleUsernameChange = event => {
@@ -159,7 +217,7 @@ class ProjectPage extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   // handle progress entry
   handleProgressChange = event => {
@@ -171,7 +229,7 @@ class ProjectPage extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   // handle remaining entry
   handleRemainingChange = event => {
@@ -183,7 +241,7 @@ class ProjectPage extends React.Component {
         remaining: Number(event.target.value)
       }
     });
-  }
+  };
 
   // handle deleting a tracking data point
   handleDeleteTrackingDatapoint = (nodeKey, trackingKey) => {
@@ -198,20 +256,22 @@ class ProjectPage extends React.Component {
     this.setState({
       data: data
     });
-  }
+  };
 
   // calculate summary data for a node
   // progress is summation of all progress datapoints
   // remaining is most recent remaining datapoint
   calculateSummaryData = key => {
-
     function traverse(root) {
       var summaryData = {};
       if (root.data.length > 0) {
         summaryData.progress = sumProgress(root.data);
-        summaryData.remaining = root.data[root.data.length-1].remaining;
+        summaryData.remaining = root.data[root.data.length - 1].remaining;
         summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
+        summaryData.percent = percentComplete(
+          summaryData.progress,
+          summaryData.total
+        );
       } else {
         summaryData.progress = 0;
         summaryData.remaining = 0;
@@ -220,35 +280,37 @@ class ProjectPage extends React.Component {
       }
       for (var i = 0; i < root.children.length; i++) {
         var childData = traverse(root.children[i]);
-        summaryData.progress +=  childData.progress;
+        summaryData.progress += childData.progress;
         summaryData.remaining += childData.remaining;
         summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
+        summaryData.percent = percentComplete(
+          summaryData.progress,
+          summaryData.total
+        );
       }
       return summaryData;
     }
 
     function percentComplete(progress, total) {
       if (total == 0) {
-        return '0%'
+        return "0%";
       } else {
-        return String(Math.round(100 * 100 * progress / total) / 100) + '%';
+        return String(Math.round((100 * 100 * progress) / total) / 100) + "%";
       }
     }
 
     function sumProgress(data) {
       var sum = 0;
-      data.map(p => sum += p.progress);
+      data.map(p => (sum += p.progress));
       return sum;
     }
 
     const data = Array.from(this.state.data);
     const root = this.retrieveNode(data, key);
     return traverse(root);
-  }
+  };
 
   allDataPointsForNode = key => {
-    
     function collect(root, datapoints) {
       var data = datapoints.concat(root.data);
       for (var i = 0; i < root.children.length; i++) {
@@ -260,10 +322,9 @@ class ProjectPage extends React.Component {
     const data = Array.from(this.state.data);
     const node = this.retrieveNode(data, key);
     return collect(node, []);
-  }
+  };
 
   retrieveRoot = (data, key) => {
-    
     function isChild(data, key) {
       for (var i = 0; i < data.length; i++) {
         if (data[i].key == key || isChild(data[i].children, key)) {
@@ -278,7 +339,7 @@ class ProjectPage extends React.Component {
         return data[i];
       }
     }
-  }
+  };
 
   handleDeleteReadPermission = (key, user) => {
     const data = Array.from(this.state.data);
@@ -291,8 +352,8 @@ class ProjectPage extends React.Component {
     }
     this.setState({
       data: data
-    })
-  }
+    });
+  };
 
   handleDeleteWritePermission = (key, user) => {
     const data = Array.from(this.state.data);
@@ -305,31 +366,41 @@ class ProjectPage extends React.Component {
     }
     this.setState({
       data: data
-    })
-  }
+    });
+  };
 
   handlePermissionFormSubmit = (rootKey, event) => {
     event.preventDefault();
-    
+
     const root = this.retrieveNode(this.state.data, rootKey);
 
-    if (this.state.formValues.read && 
-      !contains(root.readPermissions, this.state.formValues.usernamePerm)) {
-        
-        root.readPermissions.splice(root.readPermissions.length, 0, this.state.formValues.usernamePerm)
+    if (
+      this.state.formValues.read &&
+      !contains(root.readPermissions, this.state.formValues.usernamePerm)
+    ) {
+      root.readPermissions.splice(
+        root.readPermissions.length,
+        0,
+        this.state.formValues.usernamePerm
+      );
     }
 
-    if (this.state.formValues.write && 
-      !contains(root.writePermissions, this.state.formValues.usernamePerm)) {
-        
-        root.writePermissions.splice(root.writePermissions.length, 0, this.state.formValues.usernamePerm)
+    if (
+      this.state.formValues.write &&
+      !contains(root.writePermissions, this.state.formValues.usernamePerm)
+    ) {
+      root.writePermissions.splice(
+        root.writePermissions.length,
+        0,
+        this.state.formValues.usernamePerm
+      );
     }
 
     this.setState({
       formValues: {
-        usernamePerm: '',
+        usernamePerm: "",
         read: false,
-        write: false,
+        write: false
       }
     });
 
@@ -341,40 +412,38 @@ class ProjectPage extends React.Component {
       }
       return false;
     }
-  }
+  };
 
   handleUsernamePermChange = event => {
     this.setState({
       formValues: {
         usernamePerm: event.target.value,
         read: this.state.formValues.read,
-        write: this.state.formValues.write,
+        write: this.state.formValues.write
       }
     });
-  }
+  };
 
   handleReadPermissionChange = event => {
     this.setState({
       formValues: {
         usernamePerm: this.state.formValues.usernamePerm,
         read: event.target.checked,
-        write: this.state.formValues.write,
+        write: this.state.formValues.write
       }
     });
-  }
+  };
 
   handleWritePermissionChange = event => {
     this.setState({
       formValues: {
         usernamePerm: this.state.formValues.usernamePerm,
         read: this.state.formValues.read,
-        write: event.target.checked,
+        write: event.target.checked
       }
     });
-  }
-  
+  };
 }
-
 
 const AppContainer = styled.div`
   width: 100%
