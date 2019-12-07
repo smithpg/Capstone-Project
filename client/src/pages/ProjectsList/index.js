@@ -1,91 +1,31 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { Tree, Icon } from "antd";
+import { Icon } from "antd";
 import "antd/dist/antd.css";
-import ProjectPage from "../ProjectPage";
-const { TreeNode } = Tree;
-
 
 class ProjectsList extends React.Component {
-
   constructor(props) {
     super(props);
 
     this.state = {
-      data: [],
+      availableProjects: [],
       editing: null,
-      editedTitle: '',
+      editedTitle: ""
     };
   }
 
   componentDidMount() {
-    this.fetchProjects();
-  }
+    fetch("/api/projects")
+      .then(projects => projects.json())
+      .then(projectJson => {
+        console.log(projectJson);
 
-  fetchProjects = () => {
-    fetch('/api/projects')
-    .then(projects => projects.json())
-    .then(projectJson => {
-      this.setState({
-        data: projectJson
+        this.setState({
+          availableProjects: projectJson
+        });
       })
-    })
-    .catch(console.log)
-  }
-
-  renderTree = data => {
-    return data.map(node => {
-      if (node.project === null) {
-        console.log("null node")
-        console.log(node)
-        return (
-          <div></div>
-        )
-      } else if (this.state.editing === node.project._id) {
-        return (
-          <TreeNode 
-            key={node.project._id} 
-            title={this.renderEditableTreeNode(node)}/>
-        );
-      } else {
-        return (
-          <TreeNode 
-            key={node.project._id} 
-            title={this.renderTreeNodeContent(node)}/>
-        );
-      }
-    });
-  }
-
-  renderTreeNodeContent = node => {
-    return (
-      <ItemContainer>
-        <Content>{node.project.title}</Content>
-        {this.renderIcons(node)}
-      </ItemContainer>
-    );
-  }
-
-  renderEditableTreeNode = node => {
-    return (
-      <ItemContainer>
-        <Group>
-          <input
-            type="text"
-            defaultValue={node.project.title}
-            onChange={e => this.handleEditItem(node.project._id, e.target.value, e)}
-          ></input>
-          <IconContainer>
-            <Icon
-              type="check"
-              onClick={e => this.handleDoneEditingClick(node.project._id, e)}
-            ></Icon>
-          </IconContainer>
-        </Group>
-        {this.renderIcons(node)}
-      </ItemContainer>
-    );
+      .catch(console.log);
   }
 
   renderIcons = node => {
@@ -93,9 +33,7 @@ class ProjectsList extends React.Component {
       <Group>
         <IconContainer>
           <Link to={"/projects/" + node.project._id}>
-            <Icon
-              type="down"
-            ></Icon>
+            <button>View Project</button>
           </Link>
         </IconContainer>
 
@@ -114,122 +52,126 @@ class ProjectsList extends React.Component {
         </IconContainer>
       </Group>
     );
-  }
-
-  renderHeader = () => {
-    return (
-      <HeaderContainer>
-        <Header>Projects</Header>
-        <HeaderIconContainer>
-          <Icon
-            type="plus"
-            style={{ fontSize: "24px" }}
-            onClick={() => this.handleAddTopLevelProjectClick()}
-          ></Icon>
-        </HeaderIconContainer>
-      </HeaderContainer>
-    );
-  }
+  };
 
   // add top level project to project tree
-  handleAddTopLevelProjectClick = () => {
-    fetch('/api/projects', {
-      method: 'POST',
+  createNewProject = () => {
+    fetch("/api/projects", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         title: "new content"
       })
     })
-    .then(() => this.fetchProjects())
-    .catch(console.log)
-  }
+      .then(res => res.json())
+      .then(newProject =>
+        this.setState({
+          availableProjects: [...this.state.availableProjects, newProject]
+        })
+      )
+      .catch(console.log);
+  };
 
   // removing project from project tree
   handleRemoveItemClick = (id, event) => {
-    event.stopPropagation();
-
-    fetch('/api/projects/' + id, {
-      method: 'DELETE'
+    fetch("/api/projects/" + id, {
+      method: "DELETE"
     })
-    .then(() => this.fetchProjects())
-    .catch(console.log)
-  }
+      .then(
+        res =>
+          res.status === 204 &&
+          this.setState({
+            availableProjects: this.state.availableProjects.filter(
+              obj => obj.project._id !== id
+            )
+          })
+      )
+      .catch(console.log);
+  };
 
-  // return project with given key
-  retrieveNode = (id, data) => {
-    for (var i = 0; i < data.length; i++) {
-      if (id === data[i].project._id) {
-        return data[i];
-      }
-    }
-    return null;
-  }
+  // // begin editing item in project tree
+  // handleEditItemClick = (id, event) => {
+  //   this.setState({
+  //     editing: id
+  //   });
 
-  // begin editing item in project tree
-  handleEditItemClick = (id, event) => {
-    this.setState({
-      editing: id
-    });
+  //   event.stopPropagation();
+  // };
 
-    event.stopPropagation();
-  }
+  // // handle actual editing of item in project tree
+  // handleEditItem = (id, content, event) => {
+  //   const data = Array.from(this.state.data);
+  //   const node = this.retrieveNode(id, data);
+  //   node.project.title = content;
 
-  // handle actual editing of item in project tree
-  handleEditItem = (id, content, event) => {
-    const data = Array.from(this.state.data)
-    const node = this.retrieveNode(id, data);
-    node.project.title = content
-    
-    this.setState({
-      data: data
-    });
+  //   this.setState({
+  //     data: data
+  //   });
 
-    event.stopPropagation();
-  }
+  //   event.stopPropagation();
+  // };
 
-  // handle done editing button
-  handleDoneEditingClick = (id, event) => {
-    const node = this.retrieveNode(id, this.state.data)
-    const newTitle = node.project.title
+  // // handle done editing button
+  // handleDoneEditingClick = (id, event) => {
+  //   const node = this.retrieveNode(id, this.state.data);
+  //   const newTitle = node.project.title;
 
-    fetch('/api/projects/' + this.state.editing, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: newTitle
-      })
-    })
-    .then(() => this.fetchProjects())
-    .catch(console.log)
+  //   fetch("/api/projects/" + this.state.editing, {
+  //     method: "PUT",
+  //     headers: {
+  //       "Content-Type": "application/json"
+  //     },
+  //     body: JSON.stringify({
+  //       title: newTitle
+  //     })
+  //   })
+  //     .then(() => this.fetchProjects())
+  //     .catch(console.log);
 
-    this.setState({
-      editing: null
-    })
-    event.stopPropagation();
-  }
+  //   this.setState({
+  //     editing: null
+  //   });
+  //   event.stopPropagation();
+  // };
 
   render() {
     return (
       <Container>
-        <div>
-          {this.renderHeader()}
-          <Tree
-            blockNode
-          >
-            {this.renderTree(this.state.data)}
-          </Tree>
-        </div>
+        <HeaderContainer>
+          <Header>Projects</Header>
+          <HeaderIconContainer>
+            <Icon
+              type="plus"
+              style={{ fontSize: "24px" }}
+              onClick={() => this.createNewProject()}
+            ></Icon>
+          </HeaderIconContainer>
+        </HeaderContainer>
+
+        {this.state.availableProjects.map(obj => {
+          const { project } = obj;
+
+          console.log(this.state.availableProjects);
+
+          console.log(obj.project);
+          return (
+            <li>
+              <strong>{project.title}d</strong>
+              <Link to={`/projects/${project._id}`}>View</Link>
+              <button onClick={e => this.handleRemoveItemClick(project._id, e)}>
+                X
+              </button>
+            </li>
+          );
+        })}
       </Container>
     );
   }
-  
 }
 
-const Container = styled.div`
+const Container = styled.ul`
   float: left;
   width: 33%;
   overflow-y: scroll;
