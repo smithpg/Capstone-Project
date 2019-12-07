@@ -6,6 +6,7 @@
     "antd": "^3.25.0",
     "highcharts": "^7.2.1",
     "highcharts-react-official": "^2.2.2",
+    "lodash": "^4.17.15",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-icons": "^3.7.0",
