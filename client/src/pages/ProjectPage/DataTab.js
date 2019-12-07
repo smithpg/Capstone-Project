@@ -24,7 +24,7 @@ class DataTab extends React.Component {
     if (this.props.selectedTask !== null && this.props.selectedTask !== undefined) {
       return (
         <React.Fragment>
-          {this.props.selectedTask.reports.map(datapoint => (
+          {this.props.sortTrackingData(this.props.selectedTask.reports).map(datapoint => (
             <tr key={datapoint._id}>
               <td>{datapoint.date}</td>
               <td>{datapoint.username}</td>
@@ -134,24 +134,6 @@ class DataTab extends React.Component {
       }
     })
   }
-
-  // sort tracking data by date
-  sortTrackingData = data => {
-    var trackingData = Array.from(data);
-    trackingData.sort((a,b) => {
-      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
-    });
-    return trackingData;
-  }
-
-  // calulate date in milliseconds from date string
-  dateInMillisFromString = dateStr => {
-    const components = dateStr.split("-");
-    const year = parseInt(components[0])
-    const month = parseInt(components[1]) - 1;
-    const day = parseInt(components[2]);
-    return (new Date(year, month, day)).getTime();
-}
 
   // handle date entry
   handleDateChange = event => {

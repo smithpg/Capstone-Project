@@ -39,13 +39,7 @@ class ProjectPage extends React.Component {
           selectedProject={this.state.selectedProject}
           reports={this.reports}
           fetchProject={this.fetchProject}
-          formValues={this.formValues}
-          selectedTab={this.selectedTab}
-          handleSummaryTabClick={this.handleSummaryTabClick}
-          handleDataTabClick={this.handleDataTabClick}
-          handleTrackingTabClick={this.handleTrackingTabClick}
-          handlePermissionsTabClick={this.handlePermissionsTabClick}
-          calculateSummaryData={this.calculateSummaryData}
+          retrieveNode={this.retrieveNode}
           allDataPointsForNode={this.allDataPointsForNode}
           retrieveRoot={this.retrieveRoot}
           handlePermissionFormSubmit={this.handlePermissionFormSubmit}
@@ -54,7 +48,6 @@ class ProjectPage extends React.Component {
           handleWritePermissionChange={this.handleWritePermissionChange}
           handleDeleteReadPermission={this.handleDeleteReadPermission}
           handleDeleteWritePermission={this.handleDeleteWritePermission}
-          project={this.props.match.params.projectId}
         >
         </Tracking>
         
@@ -71,6 +64,10 @@ class ProjectPage extends React.Component {
     .then(proj => {
       this.setState({
         selectedProject: proj
+      }, () => {
+        if (this.state.selectedTask !== null && this.state.selectedTask !== undefined) {
+          this.retrieveTask();
+        }
       })
     })
     .catch(console.log)
@@ -78,10 +75,12 @@ class ProjectPage extends React.Component {
 
   retrieveTask = () => {
     const task = this.retrieveNode(this.state.taskId);
-    this.setState({
-      selectedTask: task,
-      reports: task.reports
-    }, console.log(this.state))
+    if (task !== null && task !== undefined) {
+      this.setState({
+        selectedTask: task,
+        reports: task.reports
+      }, console.log(this.state))
+    }
   }
 
   // on selecting a task in the tree
@@ -117,67 +116,9 @@ class ProjectPage extends React.Component {
     return search(this.state.selectedProject.tree);
   }
 
-  // calculate summary data for a node
-  // progress is summation of all progress datapoints
-  // remaining is most recent remaining datapoint
-  calculateSummaryData = key => {
+  
 
-    function traverse(root) {
-      var summaryData = {};
-      if (root.data.length > 0) {
-        summaryData.progress = sumProgress(root.data);
-        summaryData.remaining = root.data[root.data.length-1].remaining;
-        summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
-      } else {
-        summaryData.progress = 0;
-        summaryData.remaining = 0;
-        summaryData.total = 0;
-        summaryData.percent = "0%";
-      }
-      for (var i = 0; i < root.children.length; i++) {
-        var childData = traverse(root.children[i]);
-        summaryData.progress +=  childData.progress;
-        summaryData.remaining += childData.remaining;
-        summaryData.total = summaryData.progress + summaryData.remaining;
-        summaryData.percent = percentComplete(summaryData.progress, summaryData.total);
-      }
-      return summaryData;
-    }
-
-    function percentComplete(progress, total) {
-      if (total === 0) {
-        return '0%'
-      } else {
-        return String(Math.round(100 * 100 * progress / total) / 100) + '%';
-      }
-    }
-
-    function sumProgress(data) {
-      var sum = 0;
-      data.map(p => sum += p.progress);
-      return sum;
-    }
-
-    const data = Array.from(this.state.data);
-    const root = this.retrieveNode(data, key);
-    return traverse(root);
-  }
-
-  allDataPointsForNode = key => {
-    
-    function collect(root, datapoints) {
-      var data = datapoints.concat(root.data);
-      for (var i = 0; i < root.children.length; i++) {
-        data = collect(root.children[i], Array.from(data));
-      }
-      return data;
-    }
-
-    const data = Array.from(this.state.data);
-    const node = this.retrieveNode(data, key);
-    return collect(node, []);
-  }
+ 
 
   retrieveRoot = (data, key) => {
     

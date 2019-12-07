@@ -34,64 +34,44 @@ class Tracking extends React.Component {
                     projectId={this.props.projectId}
                     selectedProject={this.props.selectedProject}
                     fetchProject={this.props.fetchProject}
-                    reports={this.reports}
+                    reports={this.props.reports}
+                    sortTrackingData={this.sortTrackingData}
+                    dateInMillisFromString={this.dateInMillisFromString}
                 ></DataTab>
             );
         }
     }
 
-    /*
     renderSummaryTab = () => {
-        if (props.selected != null) {
-            return (
-                <SummaryTab
-                    selected={props.selected}
-                    calculateSummaryData={props.calculateSummaryData}
-                    retrieveNode={props.retrieveNode}
-                    dateInMillisFromString={props.dateInMillisFromString}
-                ></SummaryTab>
-            );
-        } else if (root != null) {
-            return (
-                <SummaryTab
-                    data={props.data}
-                    selected={root.key}
-                    calculateSummaryData={props.calculateSummaryData}
-                    retrieveNode={props.retrieveNode}
-                    dateInMillisFromString={props.dateInMillisFromString}
-                ></SummaryTab>
-            );
-        } else {
-            return (<React.Fragment></React.Fragment>);
-        }
-        
+        return (
+            <SummaryTab
+                taskId={this.props.taskId}
+                selectedTask={this.props.selectedTask}
+                projectId={this.props.projectId}
+                selectedProject={this.props.selectedProject}
+                fetchProject={this.props.fetchProject}
+                reports={this.props.reports}
+                sortTrackingData={this.sortTrackingData}
+                dateInMillisFromString={this.dateInMillisFromString}
+                retrieveNode={this.props.retrieveNode}
+            ></SummaryTab>
+        );
     }
 
     renderTrackingTab = () => {
-        if (props.selected != null) {
-            return (
-                <TrackingTab
-                    selected={props.selected}
-                    allDataPointsForNode={props.allDataPointsForNode}
-                    dateInMillisFromString={props.dateInMillisFromString}
-                >     
-                </TrackingTab>
-            )
-        } else if (root != null) {
-            return (
-                <TrackingTab
-                    selected={props.selected}
-                    allDataPointsForNode={props.allDataPointsForNode}
-                    dateInMillisFromString={props.dateInMillisFromString}
-                >     
-                </TrackingTab>
-            )
-        } else {
-            return (<React.Fragment></React.Fragment>);
-        }
-        
+        return (
+            <TrackingTab
+                taskId={this.props.taskId}
+                selectedTask={this.props.selectedTask}
+                projectId={this.props.projectId}
+                selectedProject={this.props.selectedProject}
+                dateInMillisFromString={this.dateInMillisFromString}
+            >     
+            </TrackingTab>
+        )  
     }
 
+    /*
     renderPermissionsTab = () => {
         return (
             <PermissionsTab
@@ -116,39 +96,12 @@ class Tracking extends React.Component {
         if (this.props.selectedTask !== null && this.state.selectedTab == 'data') {
             return this.renderDataTab();
         } else if (this.state.selectedTab == 'summary') {
-            //return renderSummaryTab();
+            return this.renderSummaryTab();
         } else if (this.state.selectedTab == 'tracking') {
-            //return renderTrackingTab();
+            return this.renderTrackingTab();
         } else if (this.state.selectedTab == 'permissions') {
             //return renderPermissionsTab();
         }
-    }
-
-    // return task with given key
-  retrieveNode = (id) => {
-
-        function traverse(root) {
-        console.log(root)
-        if (root === null) {
-            return null;
-        } else if (root._id === id) {
-            return root;
-        } else {
-            return search(root.children);
-        }
-        }
-
-        function search(array) {
-        for (var i = 0; i < array.length; i++) {
-            const node = traverse(array[i]);
-            if (node != null) {
-            return node;
-            }
-        }
-        return null;
-        }
-
-        return search(this.state.project);
     }
 
     render() {
@@ -205,6 +158,24 @@ class Tracking extends React.Component {
       selectedTab: "permissions"
     })
   }
+
+  // sort tracking data by date
+  sortTrackingData = data => {
+    var trackingData = Array.from(data);
+    trackingData.sort((a,b) => {
+      return this.dateInMillisFromString(a.date) - this.dateInMillisFromString(b.date);
+    });
+    return trackingData;
+  }
+
+  // calulate date in milliseconds from date string
+  dateInMillisFromString = dateStr => {
+    const components = dateStr.split("-");
+    const year = parseInt(components[0])
+    const month = parseInt(components[1]) - 1;
+    const day = parseInt(components[2]);
+    return (new Date(year, month, day)).getTime();
+}
 }
 
 const Container = styled.div`
