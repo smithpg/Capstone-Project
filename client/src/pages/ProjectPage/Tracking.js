@@ -5,131 +5,171 @@ import SummaryTab from "./SummaryTab";
 import TrackingTab from "./TrackingTab";
 import PermissionsTab from "./PermissionsTab";
 
-function Tracking(props) {
-  const { project, selected } = props;
+class Tracking extends React.Component {
+  constructor(props) {
+    super(props);
 
-  console.log(project);
+    this.state = {
+      selectedTab: "data"
+    };
+  }
 
-  const root =
-    project.tree.length > 0
-      ? props.retrieveNode(props.data, props.project)
-      : null;
-
-  function renderTitle() {
-    if (props.selected != null && props.selectedTab != "permissions") {
-      const selected = props.retrieveNode(props.data, props.selected);
-      return <h1>{selected.content}</h1>;
+  renderTitle = () => {
+    if (
+      this.props.selectedTask !== null &&
+      this.props.selectedTask !== undefined &&
+      this.state.selectedTab != "permissions"
+    ) {
+      return <h1>{this.props.selectedTask.title}</h1>;
     }
     return <h1></h1>;
-  }
+  };
 
-  function renderDataTab() {
+  renderDataTab = () => {
+    if (
+      this.props.selectedTask !== null &&
+      this.props.selectedTask !== undefined
+    ) {
+      return (
+        <DataTab
+          taskId={this.props.taskId}
+          selectedTask={this.props.selectedTask}
+          projectId={this.props.projectId}
+          selectedProject={this.props.selectedProject}
+          fetchProject={this.props.fetchProject}
+          reports={this.props.reports}
+          sortTrackingData={this.sortTrackingData}
+          dateInMillisFromString={this.dateInMillisFromString}
+        ></DataTab>
+      );
+    }
+    return <h1></h1>;
+  };
+
+  renderSummaryTab = () => {
     return (
-      <DataTab
-        retrieveNode={props.retrieveNode}
-        data={props.data}
-        selected={props.selected}
-        formValues={props.formValues}
-        handleFormSubmit={props.handleFormSubmit}
-        handleDateChange={props.handleDateChange}
-        handleUsernameChange={props.handleUsernameChange}
-        handleProgressChange={props.handleProgressChange}
-        handleRemainingChange={props.handleRemainingChange}
-        handleDeleteTrackingDatapoint={props.handleDeleteTrackingDatapoint}
-        dateInMillisFromString={props.dateInMillisFromString}
-      ></DataTab>
+      <SummaryTab
+        taskId={this.props.taskId}
+        selectedTask={this.props.selectedTask}
+        projectId={this.props.projectId}
+        selectedProject={this.props.selectedProject}
+        fetchProject={this.props.fetchProject}
+        reports={this.props.reports}
+        sortTrackingData={this.sortTrackingData}
+        dateInMillisFromString={this.dateInMillisFromString}
+        retrieveNode={this.props.retrieveNode}
+      ></SummaryTab>
+    );
+  };
+
+  renderTrackingTab = () => {
+    return (
+      <TrackingTab
+        taskId={this.props.taskId}
+        selectedTask={this.props.selectedTask}
+        projectId={this.props.projectId}
+        selectedProject={this.props.selectedProject}
+        dateInMillisFromString={this.dateInMillisFromString}
+      ></TrackingTab>
+    );
+  };
+
+  /*
+    renderPermissionsTab = () => {
+        return (
+            <PermissionsTab
+                data={props.data}
+                root={root.key}
+                retrieveNode={props.retrieveNode}
+                handlePermissionFormSubmit={props.handlePermissionFormSubmit}
+                handleUsernamePermChange={props.handleUsernamePermChange}
+                handleReadPermissionChange={props.handleReadPermissionChange}
+                handleWritePermissionChange={props.handleWritePermissionChange}
+                handleDeleteReadPermission={props.handleDeleteReadPermission}
+                handleDeleteWritePermission={props.handleDeleteWritePermission}
+                formValues={props.formValues}
+            >
+            </PermissionsTab>
+        );
+    }
+    */
+
+  renderTab = node => {
+    if (this.props.selectedTask !== null && this.state.selectedTab == "data") {
+      return this.renderDataTab();
+    } else if (this.state.selectedTab == "summary") {
+      return this.renderSummaryTab();
+    } else if (this.state.selectedTab == "tracking") {
+      return this.renderTrackingTab();
+    } else if (this.state.selectedTab == "permissions") {
+      //return renderPermissionsTab();
+    }
+  };
+
+  render() {
+    return (
+      <Container>
+        <TabGroup>
+          <Tab onClick={() => this.handleSummaryTabClick()}>Summary</Tab>
+          <Tab onClick={() => this.handleDataTabClick()}>Data</Tab>
+          <Tab onClick={() => this.handleTrackingTabClick()}>Tracking</Tab>
+          <Tab onClick={() => this.handlePermissionsTabClick()}>
+            Permissions
+          </Tab>
+        </TabGroup>
+        <TitleContainer>{this.renderTitle()}</TitleContainer>
+        <TabContentContainer>{this.renderTab()}</TabContentContainer>
+      </Container>
     );
   }
 
-  function renderSummaryTab() {
-    if (props.selected != null) {
-      return (
-        <SummaryTab
-          data={props.data}
-          selected={props.selected}
-          calculateSummaryData={props.calculateSummaryData}
-          retrieveNode={props.retrieveNode}
-          dateInMillisFromString={props.dateInMillisFromString}
-        ></SummaryTab>
-      );
-    } else if (root != null) {
-      return (
-        <SummaryTab
-          data={props.data}
-          selected={root.key}
-          calculateSummaryData={props.calculateSummaryData}
-          retrieveNode={props.retrieveNode}
-          dateInMillisFromString={props.dateInMillisFromString}
-        ></SummaryTab>
-      );
-    } else {
-      return <React.Fragment></React.Fragment>;
-    }
-  }
+  // load summary tab for selected project
+  handleSummaryTabClick = () => {
+    this.setState({
+      selectedTab: "summary"
+    });
+  };
 
-  function renderTrackingTab() {
-    if (props.selected != null) {
+  // load data tab for selected project
+  handleDataTabClick = () => {
+    this.setState({
+      selectedTab: "data"
+    });
+  };
+
+  // load tracking tab for selected project
+  handleTrackingTabClick = () => {
+    this.setState({
+      selectedTab: "tracking"
+    });
+  };
+
+  handlePermissionsTabClick = () => {
+    this.setState({
+      selectedTab: "permissions"
+    });
+  };
+
+  // sort tracking data by date
+  sortTrackingData = data => {
+    var trackingData = Array.from(data);
+    trackingData.sort((a, b) => {
       return (
-        <TrackingTab
-          selected={props.selected}
-          allDataPointsForNode={props.allDataPointsForNode}
-          dateInMillisFromString={props.dateInMillisFromString}
-        ></TrackingTab>
+        this.dateInMillisFromString(a.date) -
+        this.dateInMillisFromString(b.date)
       );
-    } else if (root != null) {
-      return (
-        <TrackingTab
-          selected={props.selected}
-          allDataPointsForNode={props.allDataPointsForNode}
-          dateInMillisFromString={props.dateInMillisFromString}
-        ></TrackingTab>
-      );
-    } else {
-      return <React.Fragment></React.Fragment>;
-    }
-  }
+    });
+    return trackingData;
+  };
 
-  function renderPermissionsTab() {
-    return (
-      <PermissionsTab
-        data={props.data}
-        root={root.key}
-        retrieveNode={props.retrieveNode}
-        handlePermissionFormSubmit={props.handlePermissionFormSubmit}
-        handleUsernamePermChange={props.handleUsernamePermChange}
-        handleReadPermissionChange={props.handleReadPermissionChange}
-        handleWritePermissionChange={props.handleWritePermissionChange}
-        handleDeleteReadPermission={props.handleDeleteReadPermission}
-        handleDeleteWritePermission={props.handleDeleteWritePermission}
-        formValues={props.formValues}
-      ></PermissionsTab>
-    );
-  }
-
-  function renderTab(node) {
-    if (props.selected != null && props.selectedTab == "data") {
-      return renderDataTab();
-    } else if (props.selectedTab == "summary") {
-      return renderSummaryTab();
-    } else if (props.selectedTab == "tracking") {
-      return renderTrackingTab();
-    } else if (props.selectedTab == "permissions") {
-      return renderPermissionsTab();
-    }
-  }
-
-  return (
-    <Container>
-      <TabGroup>
-        <Tab onClick={() => props.handleSummaryTabClick()}>Summary</Tab>
-        <Tab onClick={() => props.handleDataTabClick()}>Data</Tab>
-        <Tab onClick={() => props.handleTrackingTabClick()}>Tracking</Tab>
-        <Tab onClick={() => props.handlePermissionsTabClick()}>Permissions</Tab>
-      </TabGroup>
-      <TitleContainer>{renderTitle()}</TitleContainer>
-      <TabContentContainer>{renderTab()}</TabContentContainer>
-    </Container>
-  );
+  // calulate date in milliseconds from date string
+  dateInMillisFromString = dateStr => {
+    const components = dateStr.split("-");
+    const year = parseInt(components[0]);
+    const month = parseInt(components[1]) - 1;
+    const day = parseInt(components[2]);
+    return new Date(year, month, day).getTime();
+  };
 }
 
 const Container = styled.div`

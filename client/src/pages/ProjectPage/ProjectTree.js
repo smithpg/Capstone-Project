@@ -4,6 +4,7 @@ import styled from "styled-components";
 import "antd/dist/antd.css";
 const { TreeNode } = Tree;
 
+
 class ProjectTree extends React.Component {
   constructor(props) {
     super(props);
@@ -43,21 +44,15 @@ class ProjectTree extends React.Component {
       if (node.tree) {
         return node.tree.map(child => {
           if (child.children && child.children.length) {
-            if (this.state.editing === child.id) {
+            if (this.state.editing === child._id) {
               return (
-                <TreeNode
-                  key={child.id}
-                  title={this.renderEditableTreeNode(child)}
-                >
+                <TreeNode key={child._id} title={this.renderEditableTreeNode(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode
-                  key={child.id}
-                  title={this.renderTreeNodeContent(child)}
-                >
+                <TreeNode key={child._id} title={this.renderTreeNodeContent(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -82,23 +77,16 @@ class ProjectTree extends React.Component {
         });
       } else {
         return node.children.map(child => {
-          console.log(child);
           if (child.children && child.children.length) {
-            if (this.state.editing === child.id) {
+            if (this.state.editing === child._id) {
               return (
-                <TreeNode
-                  key={child.id}
-                  title={this.renderEditableTreeNode(child)}
-                >
+                <TreeNode key={child._id} title={this.renderEditableTreeNode(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode
-                  key={child.id}
-                  title={this.renderTreeNodeContent(child)}
-                >
+                <TreeNode key={child._id} title={this.renderTreeNodeContent(child)}>
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -201,32 +189,20 @@ class ProjectTree extends React.Component {
 
   // adding child to a project tree item
   handleAddChildClick = (parentId, event) => {
-    fetch("/api/projects/" + this.props.id + "/tasks/", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: "new content",
-        parent: parentId
-      })
+    
+    this.props.createTask({
+      title: "new content",
+      parent: parentId
     })
-      .then(res => console.log(res))
-      .then(() => this.fetchProject());
 
     event.stopPropagation();
   };
 
   // removing project from project tree
   handleRemoveItemClick = (id, event) => {
-    fetch("/api/projects/" + this.props.id + "/tasks/" + id, {
-      method: "DELETE"
-    })
-      .then(() => this.fetchProject())
-      .catch(console.log);
-
+    this.props.removeTask(id)
     event.stopPropagation();
-  };
+  }
 
   // begin editing item in project tree
   handleEditItemClick = (id, event) => {
@@ -252,17 +228,7 @@ class ProjectTree extends React.Component {
 
   // handle done editing button
   handleDoneEditingClick = (id, event) => {
-    fetch("/api/projects/" + this.props.id + "/tasks/" + id, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        title: this.state.task.title
-      })
-    })
-      .then(res => console.log(res))
-      .then(() => this.fetchProject());
+    this.props.updateTask(id, this.state.task)
 
     this.setState({
       editing: null,
