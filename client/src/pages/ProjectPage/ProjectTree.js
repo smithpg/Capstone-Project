@@ -5,44 +5,34 @@ import "antd/dist/antd.css";
 const { TreeNode } = Tree;
 
 class ProjectTree extends React.Component {
-
   constructor(props) {
-    super(props)
-    this.state={
+    super(props);
+    this.state = {
       editing: null,
-      project: null,
       task: null
-    }
-  }
-
-  componentDidMount() {
-    this.fetchProject();
-  }
-
-  fetchProject = () => {
-    fetch('/api/projects/' + this.props.id)
-    .then(res => res.json())
-    .then(proj => {
-      this.setState({
-        project: proj
-      })
-    })
-    .catch(console.log)
+    };
   }
 
   render() {
+    const { project } = this.props;
+
+    console.log(project);
+
     return (
       <Container>
         <div>
           {this.renderHeader()}
-          <Tree
-            blockNode
-            draggable={true}
-            //onDrop={this.onDrop}
-            onSelect={this.props.onSelect}
-          >
-            {this.renderTree(this.state.project)}
-          </Tree>
+
+          {project && project.tree && (
+            <Tree
+              blockNode
+              draggable={true}
+              //onDrop={this.onDrop}
+              onSelect={this.props.onSelect}
+            >
+              {this.renderTree(this.props.project)}
+            </Tree>
+          )}
         </div>
       </Container>
     );
@@ -55,13 +45,19 @@ class ProjectTree extends React.Component {
           if (child.children && child.children.length) {
             if (this.state.editing === child.id) {
               return (
-                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                <TreeNode
+                  key={child.id}
+                  title={this.renderEditableTreeNode(child)}
+                >
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                <TreeNode
+                  key={child.id}
+                  title={this.renderTreeNodeContent(child)}
+                >
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -86,17 +82,23 @@ class ProjectTree extends React.Component {
         });
       } else {
         return node.children.map(child => {
-          console.log(child)
+          console.log(child);
           if (child.children && child.children.length) {
             if (this.state.editing === child.id) {
               return (
-                <TreeNode key={child.id} title={this.renderEditableTreeNode(child)}>
+                <TreeNode
+                  key={child.id}
+                  title={this.renderEditableTreeNode(child)}
+                >
                   {this.renderTree(child)}
                 </TreeNode>
               );
             } else {
               return (
-                <TreeNode key={child.id} title={this.renderTreeNodeContent(child)}>
+                <TreeNode
+                  key={child.id}
+                  title={this.renderTreeNodeContent(child)}
+                >
                   {this.renderTree(child)}
                 </TreeNode>
               );
@@ -120,9 +122,8 @@ class ProjectTree extends React.Component {
           }
         });
       }
-      
     }
-  }
+  };
 
   renderTreeNodeContent = node => {
     return (
@@ -131,7 +132,7 @@ class ProjectTree extends React.Component {
         {this.renderIcons(node)}
       </ItemContainer>
     );
-  }
+  };
 
   renderEditableTreeNode = node => {
     return (
@@ -152,7 +153,7 @@ class ProjectTree extends React.Component {
         {this.renderIcons(node)}
       </ItemContainer>
     );
-  }
+  };
 
   renderIcons = node => {
     return (
@@ -179,140 +180,97 @@ class ProjectTree extends React.Component {
         </IconContainer>
       </Group>
     );
-  }
+  };
 
-  renderHeader = ()  => {
-    if (this.state.project != null) {
+  renderHeader = () => {
+    if (this.props.project != null) {
       return (
         <HeaderContainer>
-          <Header>{this.state.project.title}</Header>
+          <Header>{this.props.project.title}</Header>
           <HeaderIconContainer>
             <Icon
               type="plus"
               style={{ fontSize: "24px" }}
-              onClick={() => this.handleAddTopLevelProjectItemClick()}
+              onClick={() => this.props.createTask({ title: "New Task" })}
             ></Icon>
           </HeaderIconContainer>
         </HeaderContainer>
       );
     }
-  }
-
-  // add top level task to project tree
-  handleAddTopLevelProjectItemClick = () => {
-    fetch('/api/projects/' + this.props.id +'/tasks/', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: "new content",
-
-      })
-    })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
-  }
+  };
 
   // adding child to a project tree item
   handleAddChildClick = (parentId, event) => {
-    fetch('/api/projects/' + this.props.id +'/tasks/', {
-      method: 'POST',
+    fetch("/api/projects/" + this.props.id + "/tasks/", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         title: "new content",
         parent: parentId
       })
     })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
+      .then(res => console.log(res))
+      .then(() => this.fetchProject());
 
     event.stopPropagation();
-  }
+  };
 
   // removing project from project tree
   handleRemoveItemClick = (id, event) => {
-    fetch('/api/projects/' + this.props.id + '/tasks/' + id, {
+    fetch("/api/projects/" + this.props.id + "/tasks/" + id, {
       method: "DELETE"
     })
-    .then(() => this.fetchProject())
-    .catch(console.log)
+      .then(() => this.fetchProject())
+      .catch(console.log);
 
     event.stopPropagation();
-  }
-
-  // return task with given key
-  retrieveNode = (id) => {
-
-    function traverse(root) {
-      console.log(root)
-      if (root === null) {
-        return null;
-      } else if (root._id === id) {
-        return root;
-      } else {
-        return search(root.children);
-      }
-    }
-
-    function search(array) {
-      for (var i = 0; i < array.length; i++) {
-        const node = traverse(array[i]);
-        if (node != null) {
-          return node;
-        }
-      }
-      return null;
-    }
-
-    return search(this.state.project);
-  }
+  };
 
   // begin editing item in project tree
   handleEditItemClick = (id, event) => {
-    const node = this.retrieveNode(id);
+    const node = this.props.retrieveNode(id);
 
     this.setState({
       editing: id,
       task: node
     });
     event.stopPropagation();
-  }
+  };
 
   // handle actual editing of item in project tree
   handleEditItem = (id, content, event) => {
     this.setState((state, props) => {
-      var updated = Object.assign({}, state.task)
-      updated.title = content
-      return {task: updated}
-    })
+      var updated = Object.assign({}, state.task);
+      updated.title = content;
+      return { task: updated };
+    });
 
     event.stopPropagation();
-  }
+  };
 
   // handle done editing button
   handleDoneEditingClick = (id, event) => {
-    fetch('/api/projects/' + this.props.id +'/tasks/' + id, {
-      method: 'PUT',
+    fetch("/api/projects/" + this.props.id + "/tasks/" + id, {
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        title: this.state.task.title,
+        title: this.state.task.title
       })
     })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
+      .then(res => console.log(res))
+      .then(() => this.fetchProject());
 
     this.setState({
       editing: null,
       task: null
-    })
+    });
 
     event.stopPropagation();
-  }
+  };
 
   /*
   // on dropping a project in the tree into a new position
@@ -325,7 +283,7 @@ class ProjectTree extends React.Component {
 
     const dragNode = this.retrieveNode(dragKey);
     console.log(dragNode)
-    const dropIndex = this.indexOf(this.state.project.tree, dropKey);
+    const dropIndex = this.indexOf(this.props.project.tree, dropKey);
     console.log(dropIndex)
 
     this.insertNode(dragNode, dropKey, dropPosition, dropIndex, this.updateParent);
@@ -334,7 +292,6 @@ class ProjectTree extends React.Component {
 
   // return index of a project given its key within its parent's array
   indexOf = (data, key) => {
-
     for (var i = 0; i < data.length; i++) {
       if (data[i].key == key) {
         return i;
@@ -345,30 +302,29 @@ class ProjectTree extends React.Component {
       }
     }
     return -1;
-  }
+  };
 
   updateParent = (node, parent) => {
-    console.log('update parent')
-    console.log(node)
-    console.log(parent)
-    fetch('/api/projects/' + this.props.id +'/tasks/' + node._id, {
-      method: 'PUT',
+    console.log("update parent");
+    console.log(node);
+    console.log(parent);
+    fetch("/api/projects/" + this.props.id + "/tasks/" + node._id, {
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
         title: this.state.task.title,
         parent: parent._id
       })
     })
-    .then(res => console.log(res))
-    .then(() => this.fetchProject())
-    .catch(console.log)
-  }
+      .then(res => console.log(res))
+      .then(() => this.fetchProject())
+      .catch(console.log);
+  };
 
   // insert node into project tree
   insertNode = (dragNode, dropKey, dropPosition, dropIndex, updateParent) => {
-
     function traverse(root) {
       if (root === null) {
         return;
@@ -381,27 +337,26 @@ class ProjectTree extends React.Component {
       for (var i = 0; i < array.length; i++) {
         if (array[i]._id === dropKey) {
           if (dropPosition === dropIndex - 1) {
-            updateParent(dragNode, parent)
+            updateParent(dragNode, parent);
             //array.splice(i, 0, dragNode);
           } else if (dropPosition === dropIndex + 1) {
             //array.splice(i + 1, 0, dragNode);
-            updateParent(dragNode, parent)
+            updateParent(dragNode, parent);
           } else {
             //array[i].children.splice(array[i].children.length, 0, dragNode);
-            updateParent(dragNode, array[i])
+            updateParent(dragNode, array[i]);
           }
-            return;
+          return;
         }
         traverse(array[i]);
-      }    
+      }
     }
 
-    search(this.state.project.tree, null)
-  }
+    search(this.props.project.tree, null);
+  };
 
   // remove project with given key from project tree
   removeNode = (data, key) => {
-
     function traverse(root) {
       if (root === null) {
         return null;
@@ -420,12 +375,11 @@ class ProjectTree extends React.Component {
         if (node != null) {
           return;
         }
-      }  
+      }
     }
 
-    search(data);      
-  }
-
+    search(data);
+  };
 }
 
 const Container = styled.div`
