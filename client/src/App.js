@@ -4,7 +4,7 @@ import "antd/dist/antd.css";
 import "./App.css";
 import AuthPage from "./pages/AuthPage";
 import ProjectsList from "./pages/ProjectsList";
-import ProjectPage from './pages/ProjectPage';
+import ProjectPage from "./pages/ProjectPage";
 
 // TODO: Implement this
 function browserHasToken() {
@@ -16,18 +16,15 @@ function browserHasToken() {
   //     return false;
   // }
   return false;
-
 }
 
 class App extends React.Component {
-
   constructor(props) {
     super(props);
 
-    this.state = {
-    }
+    this.state = {};
   }
-  
+
   render() {
     return (
       <BrowserRouter>
@@ -37,13 +34,14 @@ class App extends React.Component {
           </Route>
           <Route path="/login" component={AuthPage} />
           <Route exact path="/projects" component={ProjectsList}></Route>
-          <Route path="/projects/:projectId" render={(routeProps) => (
-            <ProjectPage
-              {...routeProps}
-            >
-            </ProjectPage>
-          )}>
-          </Route>
+          <Route
+            path="/projects/:projectId"
+            render={routeProps => (
+              <ProjectPage
+                projectId={routeProps.match.params.projectId}
+              ></ProjectPage>
+            )}
+          ></Route>
         </Switch>
       </BrowserRouter>
     );
