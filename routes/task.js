@@ -80,8 +80,11 @@ router.post(
   authMiddleware.userIsLoggedIn,
   authMiddleware.userHasPermission("EDIT"),
   async (req, res, next) => {
-    await Report.create({ ...req.body, task: req.params.task_id });
-    res.status(201).send({ success: true });
+    const report = await Report.create({
+      ...req.body,
+      task: req.params.task_id
+    });
+    res.status(201).send(report);
   }
 );
 
@@ -91,6 +94,18 @@ router.put(
   authMiddleware.userHasPermission("EDIT"),
   async (req, res, next) => {
     await Report.findByIdAndUpdate(req.params.report_id, req.body);
+    res.status(204).send();
+  }
+);
+router.delete(
+  "/:task_id/reports/:report_id",
+  authMiddleware.userIsLoggedIn,
+  authMiddleware.userHasPermission("EDIT"),
+  async (req, res, next) => {
+    const report = await Report.findById(req.params.report_id);
+
+    await report.remove();
+
     res.status(204).send();
   }
 );

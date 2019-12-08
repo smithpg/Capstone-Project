@@ -1,115 +1,164 @@
-import React from 'react';
-import styled from 'styled-components';
-import { Icon } from 'antd';
+import React, { Component } from "react";
+import styled from "styled-components";
+import { Icon } from "antd";
 
-function PermissionsTab(props) {
+export default class PermissionsTab extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { email: "", permissionLevel: "", permissions: [] };
+  }
 
-    function renderReadPermissionsData() {
-        const node = props.retrieveNode(props.data, props.root);
-        return (
-            <React.Fragment>
-                {node.readPermissions.map(user => (
-                    <tr key={user}>
-                        <td>{user}</td>
-                        <td>
-                            <Icon 
-                                type="delete"
-                                onClick={() => props.handleDeleteReadPermission(node.key, user)}
-                            ></Icon>
-                        </td>
-                    </tr>
-                ))}
-            </React.Fragment>
-        );
-    }
+  componentDidMount() {
+    fetch("/api/projects/" + this.props.projectId + "/permissions")
+      .then(res => res.json())
+      .then(parsed => this.setState({ permissions: parsed }));
+  }
 
-    function renderWritePermissionsData() {
-        const node = props.retrieveNode(props.data, props.root);
-        return (
-            <React.Fragment>
-                {node.writePermissions.map(user => (
-                    <tr key={user}>
-                        <td>{user}</td>
-                        <td>
-                            <Icon 
-                                type="delete"
-                                onClick={() => props.handleDeleteWritePermission(node.key, user)}
-                            ></Icon>
-                        </td>
-                    </tr>
-                ))}
-            </React.Fragment>
-        );
-    }
-
-    function submit(event) {
-        props.handlePermissionFormSubmit(props.root, event);
-    }
-
+  renderReadPermissionsData() {
     return (
-        <div margin="16px">
-            <ComponentHeader>
-                <Header>Add Permissions</Header>
-            </ComponentHeader>
-            
-            <ComponentBody>
-                <form onSubmit={submit}>
-                    <label>Username: </label>
-                    <input type="text" value={props.formValues.usernamePerm} onChange={props.handleUsernamePermChange}></input>
-                    <br></br>
-                    <label>Read: </label>
-                    <input type="checkbox" checked={props.formValues.read} onChange={props.handleReadPermissionChange}></input>
-                    <br></br>
-                    <label>Write: </label>
-                    <input type="checkbox" checked={props.formValues.write} onChange={props.handleWritePermissionChange}></input>
-                    <br></br>
-                    <input type="submit" value="Submit"></input>
-                </form>
-            </ComponentBody>
-
-            <br></br>
-            
-            <ComponentHeader>
-                <Header>Read Permissions</Header>
-            </ComponentHeader>
-            
-            <ComponentBody>
-                <table
-                    width="100%"
-                >
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderReadPermissionsData()}
-                    </tbody>
-                </table>
-            </ComponentBody>
-
-            <br></br>
-
-            <ComponentHeader>
-                <Header>Write Permissions</Header>
-            </ComponentHeader>
-            
-            <ComponentBody>
-                <table
-                    width="100%"
-                >
-                    <thead>
-                        <tr>
-                            <th>Username</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderWritePermissionsData()}
-                    </tbody>
-                </table>
-            </ComponentBody>
-        </div>
+      <React.Fragment>
+        {this.state.permissions
+          .filter(permission => permission.level === "READ")
+          .map(permission => (
+            <tr key={permission._id}>
+              <td>{permission.user.email}</td>
+              <td>
+                <Icon
+                  type="delete"
+                  onClick={() => this.handleDeletePermission(permission._id)}
+                ></Icon>
+              </td>
+            </tr>
+          ))}
+      </React.Fragment>
     );
+  }
+
+  renderWritePermissionsData() {
+    return (
+      <React.Fragment>
+        {this.state.permissions
+          .filter(permission => permission.level === "EDIT")
+          .map(permission => (
+            <tr key={permission._id}>
+              <td>{permission.user.email}</td>
+              <td>
+                <Icon
+                  type="delete"
+                  onClick={() => this.handleDeletePermission(permission._id)}
+                ></Icon>
+              </td>
+            </tr>
+          ))}
+      </React.Fragment>
+    );
+  }
+
+  onChange = e => {
+    this.setState({
+      [e.target.name]: e.target.value
+    });
+  };
+
+  submit = e => {
+    e.preventDefault();
+    this.handlePermissionFormSubmit();
+  };
+
+  handlePermissionFormSubmit = () => {
+    fetch("/api/projects/" + this.props.projectId + "/permissions/", {
+      method: "post",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        userEmail: this.state.email,
+        permissionLevel: this.state.permissionLevel
+      })
+    })
+      .then(res => res.json())
+      .then(parsedRes => {
+        this.setState({
+          permissions: [...this.state.permissions, parsedRes]
+        });
+      });
+  };
+
+  handleDeletePermission = id => {
+    fetch("/api/projects/" + this.props.projectId + "/permissions/" + id, {
+      method: "delete"
+    }).then(() => {
+      this.setState({
+        permissions: this.state.permissions.filter(p => (p._id = !id))
+      });
+    });
+  };
+
+  render() {
+    return (
+      <div margin="16px">
+        <ComponentHeader>
+          <Header>Add Permissions</Header>
+        </ComponentHeader>
+
+        <ComponentBody>
+          <form onSubmit={this.submit}>
+            <label>Email: </label>
+            <input
+              type="text"
+              name="email"
+              value={this.state.email}
+              onChange={this.onChange}
+            ></input>
+            <br></br>
+            <select
+              name="permissionLevel"
+              value={this.state.permissionLevel}
+              onChange={this.onChange}
+            >
+              <option value={"READ"}>READ</option>
+              <option value={"EDIT"}>EDIT</option>
+            </select>
+            <input type="submit" value="Submit"></input>
+          </form>
+        </ComponentBody>
+
+        <br></br>
+
+        <ComponentHeader>
+          <Header>Read Permissions</Header>
+        </ComponentHeader>
+
+        <ComponentBody>
+          <table width="100%">
+            <thead>
+              <tr>
+                <th>Username</th>
+              </tr>
+            </thead>
+            <tbody>{this.renderReadPermissionsData()}</tbody>
+          </table>
+        </ComponentBody>
+
+        <br></br>
+
+        <ComponentHeader>
+          <Header>Write Permissions</Header>
+        </ComponentHeader>
+
+        <ComponentBody>
+          <table width="100%">
+            <thead>
+              <tr>
+                <th>Username</th>
+              </tr>
+            </thead>
+            <tbody>{this.renderWritePermissionsData()}</tbody>
+          </table>
+        </ComponentBody>
+      </div>
+    );
+  }
 }
 
 const ComponentHeader = styled.div`
@@ -129,7 +178,5 @@ const ComponentBody = styled.div`
 `;
 
 const Header = styled.h2`
-    margin: 0px
+  margin: 0px;
 `;
-
-export default PermissionsTab;

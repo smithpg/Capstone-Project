@@ -17,3 +17,4 @@ module.exports.Task = require("./task");
 module.exports.Project = require("./project");
 module.exports.Report = require("./report");
 module.exports.Permission = require("./permission");
+module.exports.User = require("./user");
