@@ -2,48 +2,50 @@ import React from "react";
 import styled from "styled-components";
 import { Icon } from "antd";
 
-class DataTab extends React.Component {
+import { modifyNode } from "../../helpers/tree";
 
+class DataTab extends React.Component {
   constructor(props) {
     super(props);
 
-    this.state={
+    this.state = {
       formValues: {
-        date: '',
-        progress: '',
-        remaining: ''
+        date: "",
+        progress: "",
+        remaining: ""
       }
-    }
-  }
-
-  componentDidMount() {
-    this.props.fetchProject()
+    };
   }
 
   renderReviewData = () => {
-    if (this.props.selectedTask !== null && this.props.selectedTask !== undefined) {
+    if (
+      this.props.selectedTask !== null &&
+      this.props.selectedTask !== undefined
+    ) {
       return (
         <React.Fragment>
-          {this.props.sortTrackingData(this.props.selectedTask.reports).map(datapoint => (
-            <tr key={datapoint._id}>
-              <td>{datapoint.date}</td>
-              <td>{datapoint.username}</td>
-              <td>{datapoint.progress}</td>
-              <td>{datapoint.remaining}</td>
-              <td>
-                <Icon
-                  type="delete"
-                  onClick={() =>
-                    this.handleDeleteTrackingDatapoint(datapoint._id)
-                  }
-                ></Icon>
-              </td>
-            </tr>
-          ))}
+          {this.props
+            .sortTrackingData(this.props.selectedTask.reports)
+            .map(datapoint => (
+              <tr key={datapoint._id}>
+                <td>{datapoint.date}</td>
+                <td>{datapoint.username}</td>
+                <td>{datapoint.progress}</td>
+                <td>{datapoint.remaining}</td>
+                <td>
+                  <Icon
+                    type="delete"
+                    onClick={() =>
+                      this.handleDeleteTrackingDatapoint(datapoint._id)
+                    }
+                  ></Icon>
+                </td>
+              </tr>
+            ))}
         </React.Fragment>
       );
     }
-  }
+  };
 
   render() {
     return (
@@ -51,7 +53,7 @@ class DataTab extends React.Component {
         <ComponentHeader>
           <Header>Add Data</Header>
         </ComponentHeader>
-  
+
         <ComponentBody>
           <form onSubmit={this.handleFormSubmit}>
             <label>Date: </label>
@@ -80,13 +82,13 @@ class DataTab extends React.Component {
             <input type="submit" value="Submit"></input>
           </form>
         </ComponentBody>
-  
+
         <br></br>
-  
+
         <ComponentHeader>
           <Header>Review Data</Header>
         </ComponentHeader>
-  
+
         <ComponentBody>
           <table width="100%">
             <thead>
@@ -103,37 +105,55 @@ class DataTab extends React.Component {
       </div>
     );
   }
-  
+
   // handle adding data for an item
   handleFormSubmit = event => {
     event.preventDefault();
 
-    fetch('/api/projects/' + this.props.projectId + '/tasks/' + this.props.taskId + '/reports', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        task: this.props.taskId,
-        date: this.state.formValues.date,
-        remaining: this.state.formValues.remaining,
-        progress: this.state.formValues.progress
+    const newReport = {
+      task: this.props.taskId,
+      date: this.state.formValues.date,
+      remaining: this.state.formValues.remaining,
+      progress: this.state.formValues.progress
+    };
+
+    fetch(
+      "/api/projects/" +
+        this.props.selectedTask.project +
+        "/tasks/" +
+        this.props.selectedTask._id +
+        "/reports/",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(newReport)
+      }
+    )
+      .then(res => res.json())
+      .then(parsedRes => {
+        const newTree = modifyNode(
+          this.props.projectTree,
+          this.props.selectedTask._id,
+          node => {
+            node.reports = [...node.reports, parsedRes];
+          }
+        );
+
+        this.props.replaceTree(newTree);
       })
-    })
-    .then(res => {
-      console.log(res)
-    })
-    .then(() => this.props.fetchProject())
-    .catch(console.log)
+      .then(() => this.setState({}))
+      .catch(console.log);
 
     this.setState({
       formValues: {
-        date: '',
-        progress: '',
-        remaining: ''
+        date: "",
+        progress: "",
+        remaining: ""
       }
-    })
-  }
+    });
+  };
 
   // handle date entry
   handleDateChange = event => {
@@ -145,7 +165,7 @@ class DataTab extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   // handle progress entry
   handleProgressChange = event => {
@@ -157,7 +177,7 @@ class DataTab extends React.Component {
         remaining: this.state.formValues.remaining
       }
     });
-  }
+  };
 
   // handle remaining entry
   handleRemainingChange = event => {
@@ -169,19 +189,27 @@ class DataTab extends React.Component {
         remaining: Number(event.target.value)
       }
     });
-  }
+  };
 
   // handle deleting a tracking data point
-  handleDeleteTrackingDatapoint = (reportId) => {
-    fetch('/api/projects/' + this.props.projectId + '/tasks/' + this.props.taskId + '/reports/' + reportId, {
-      method: 'DELETE',
-    })
-    .then(res => {
-      console.log(res)
-    })
-    .then(() => this.updateData())
-    .catch(console.log)
-  }
+  handleDeleteTrackingDatapoint = reportId => {
+    fetch(
+      "/api/projects/" +
+        this.props.selectedTask.project +
+        "/tasks/" +
+        this.props.selectedTask._id +
+        "/reports/" +
+        reportId,
+      {
+        method: "DELETE"
+      }
+    )
+      .then(res => {
+        console.log(res);
+      })
+      .then(() => this.updateData())
+      .catch(console.log);
+  };
 }
 
 const ComponentHeader = styled.div`

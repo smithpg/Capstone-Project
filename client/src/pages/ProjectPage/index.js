@@ -5,7 +5,6 @@ import _ from "lodash";
 import Tracking from "./Tracking";
 
 import * as treeHelpers from "../../helpers/tree";
-import { isNullOrUndefined } from "util";
 
 class ProjectPage extends React.Component {
   constructor(props) {
@@ -18,6 +17,18 @@ class ProjectPage extends React.Component {
       reports: null
     };
   }
+
+  replaceTree = newTree => {
+    console.log(newTree);
+    console.log(this.state.projectTree);
+
+    this.setState(
+      {
+        projectTree: newTree
+      },
+      () => this.retrieveTask()
+    );
+  };
 
   componentDidMount() {
     fetch("/api/projects/" + this.props.projectId)
@@ -105,25 +116,27 @@ class ProjectPage extends React.Component {
           projectTitle={this.state.projectTitle}
         ></ProjectTree>
 
-        {/* <Tracking
-          selected={this.selected}
-          data={this.data}
+        <Tracking
+          selectedTask={this.state.selectedTask}
           retrieveNode={this.retrieveNode}
-          allDataPointsForNode={this.allDataPointsForNode}
           retrieveRoot={this.retrieveRoot}
+          replaceTree={this.replaceTree}
+          projectTree={this.state.projectTree}
+          projectId={this.props.projectId}
           handlePermissionFormSubmit={this.handlePermissionFormSubmit}
           handleUsernamePermChange={this.handleUsernamePermChange}
           handleReadPermissionChange={this.handleReadPermissionChange}
           handleWritePermissionChange={this.handleWritePermissionChange}
           handleDeleteReadPermission={this.handleDeleteReadPermission}
           handleDeleteWritePermission={this.handleDeleteWritePermission}
-        >
-        </Tracking>*/}
+        ></Tracking>
       </AppContainer>
     );
   }
 
   retrieveTask = () => {
+    console.log(this.state.taskId);
+
     const task = this.retrieveNode(this.state.taskId);
     if (task !== null && task !== undefined) {
       this.setState(
@@ -131,13 +144,16 @@ class ProjectPage extends React.Component {
           selectedTask: task,
           reports: task.reports
         },
-        console.log(this.state)
+
+        () => console.log("new state", this.state)
       );
     }
   };
 
   // on selecting a task in the tree
   onSelect = (keys, info) => {
+    console.log("onselect::", keys);
+
     this.setState(
       {
         taskId: keys[0]

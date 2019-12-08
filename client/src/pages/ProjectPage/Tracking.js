@@ -32,10 +32,10 @@ class Tracking extends React.Component {
     ) {
       return (
         <DataTab
-          taskId={this.props.taskId}
           selectedTask={this.props.selectedTask}
-          projectId={this.props.projectId}
           selectedProject={this.props.selectedProject}
+          projectTree={this.props.projectTree}
+          replaceTree={this.props.replaceTree}
           fetchProject={this.props.fetchProject}
           reports={this.props.reports}
           sortTrackingData={this.sortTrackingData}
@@ -63,7 +63,7 @@ class Tracking extends React.Component {
   };
 
   renderTrackingTab = () => {
-    return (
+    return this.props.selectedTask ? (
       <TrackingTab
         taskId={this.props.taskId}
         selectedTask={this.props.selectedTask}
@@ -71,28 +71,17 @@ class Tracking extends React.Component {
         selectedProject={this.props.selectedProject}
         dateInMillisFromString={this.dateInMillisFromString}
       ></TrackingTab>
-    );
+    ) : null;
   };
 
-  /*
-    renderPermissionsTab = () => {
-        return (
-            <PermissionsTab
-                data={props.data}
-                root={root.key}
-                retrieveNode={props.retrieveNode}
-                handlePermissionFormSubmit={props.handlePermissionFormSubmit}
-                handleUsernamePermChange={props.handleUsernamePermChange}
-                handleReadPermissionChange={props.handleReadPermissionChange}
-                handleWritePermissionChange={props.handleWritePermissionChange}
-                handleDeleteReadPermission={props.handleDeleteReadPermission}
-                handleDeleteWritePermission={props.handleDeleteWritePermission}
-                formValues={props.formValues}
-            >
-            </PermissionsTab>
-        );
-    }
-    */
+  renderPermissionsTab = () => {
+    return (
+      <PermissionsTab
+        projectId={this.props.projectId}
+        data={this.props.data}
+      ></PermissionsTab>
+    );
+  };
 
   renderTab = node => {
     if (this.props.selectedTask !== null && this.state.selectedTab == "data") {
@@ -102,7 +91,7 @@ class Tracking extends React.Component {
     } else if (this.state.selectedTab == "tracking") {
       return this.renderTrackingTab();
     } else if (this.state.selectedTab == "permissions") {
-      //return renderPermissionsTab();
+      return this.renderPermissionsTab();
     }
   };
 
