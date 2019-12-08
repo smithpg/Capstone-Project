@@ -5,13 +5,15 @@ import { Icon } from "antd";
 export default class PermissionsTab extends Component {
   constructor(props) {
     super(props);
-    this.state = { email: "", permissionLevel: "", permissions: [] };
+    this.state = { email: "", permissionLevel: "READ", permissions: [] };
   }
 
   componentDidMount() {
     fetch("/api/projects/" + this.props.projectId + "/permissions")
       .then(res => res.json())
-      .then(parsed => this.setState({ permissions: parsed }));
+      .then(parsed =>
+        this.setState({ permissions: parsed }, () => console.log(this.state))
+      );
   }
 
   renderReadPermissionsData() {
@@ -78,9 +80,12 @@ export default class PermissionsTab extends Component {
     })
       .then(res => res.json())
       .then(parsedRes => {
-        this.setState({
-          permissions: [...this.state.permissions, parsedRes]
-        });
+        this.setState(
+          {
+            permissions: [...this.state.permissions, parsedRes]
+          },
+          () => console.log(this.state)
+        );
       });
   };
 
@@ -89,7 +94,7 @@ export default class PermissionsTab extends Component {
       method: "delete"
     }).then(() => {
       this.setState({
-        permissions: this.state.permissions.filter(p => (p._id = !id))
+        permissions: this.state.permissions.filter(p => p._id != id)
       });
     });
   };

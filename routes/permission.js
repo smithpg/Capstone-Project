@@ -17,6 +17,8 @@ router.post(
       // Look for user with matching email
       const user = await User.findOne({ email: userEmail });
 
+      if (!user) throw new Error("User with that email does not exist.");
+
       // Create the specified permission
       const newPermission = await Permission.create({
         user: user.id,
@@ -24,10 +26,12 @@ router.post(
         level: permissionLevel
       });
 
-      res
-        .status(200)
-        .send({ ...newPermission, user: { ...newPermission.user, email } });
+      await newPermission.populate("user").execPopulate();
+
+      res.status(200).send(newPermission);
     } catch (error) {
+      console.error(error);
+
       next(error);
     }
   }
