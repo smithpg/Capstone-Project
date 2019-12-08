@@ -143,42 +143,49 @@ class ProjectsList extends React.Component {
           <Header>Projects</Header>
         </HeaderContainer>
 
-        <ListContainer>
-          {this.state.availableProjects.map(obj => {
-            const { project } = obj;
+        {["ADMIN", "EDIT", "READ"].map(permissionLevel => {
+          return (
+            <ListContainer>
+              <h2>{permissionLevel}</h2>
+              {this.state.availableProjects
+                .filter(p => p.permission === permissionLevel)
+                .map(obj => {
+                  const { project } = obj;
 
-            console.log(this.state.availableProjects);
+                  console.log(this.state.availableProjects);
 
-            console.log(obj.project);
-            return (
+                  console.log(obj.project);
+                  return (
+                    <ListItemContainer>
+                      <li>
+                        <ListContentContainer>
+                          <Strong>{project.title}</Strong>
+                          <IconContainer>
+                            <Link to={`/projects/${project._id}`}>View</Link>
+                            <Button
+                              onClick={e =>
+                                this.handleRemoveItemClick(project._id, e)
+                              }
+                            >
+                              X
+                            </Button>
+                          </IconContainer>
+                        </ListContentContainer>
+                      </li>
+                    </ListItemContainer>
+                  );
+                })}
+
               <ListItemContainer>
-                <li>
-                  <ListContentContainer>
-                    <Strong>{project.title}</Strong>
-                    <IconContainer>
-                      <Link to={`/projects/${project._id}`}>View</Link>
-                      <Button
-                        onClick={e =>
-                          this.handleRemoveItemClick(project._id, e)
-                        }
-                      >
-                        X
-                      </Button>
-                    </IconContainer>
-                  </ListContentContainer>
-                </li>
+                <Icon
+                  type="plus"
+                  style={{ fontSize: "24px" }}
+                  onClick={() => this.createNewProject()}
+                ></Icon>
               </ListItemContainer>
-            );
-          })}
-
-          <ListItemContainer>
-            <Icon
-              type="plus"
-              style={{ fontSize: "24px" }}
-              onClick={() => this.createNewProject()}
-            ></Icon>
-          </ListItemContainer>
-        </ListContainer>
+            </ListContainer>
+          );
+        })}
       </Container>
     );
   }
